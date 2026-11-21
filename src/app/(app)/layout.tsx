@@ -12,7 +12,7 @@ export default function AppLayout({
   return (
     <div className="flex min-h-screen">
       <AppSidebar />
-      <div className="flex min-w-0 flex-1 flex-col gap-4 px-4 pt-4 pb-28 sm:px-6 sm:pt-6 md:pb-6 lg:px-8 lg:pt-8 lg:pb-8">
+      <div className="flex min-w-0 flex-1 flex-col gap-4 px-4 pt-4 pb-28 sm:px-6 sm:pt-6 md:pb-6 lg:px-8 lg:pt-8 lg:pb-8 md:pl-[calc(var(--rail-width,5.5rem)+1.5rem)] lg:pl-[calc(var(--rail-width,5.5rem)+1.5rem)] md:transition-[padding] md:duration-300">
         <TopBar />
         <main className="flex-1">{children}</main>
       </div>

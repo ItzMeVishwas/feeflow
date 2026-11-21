@@ -1,0 +1,10 @@
+﻿const ts = require('typescript');
+const fs = require('fs');
+const src = fs.readFileSync('src/lib/format.ts', 'utf8');
+const out = ts.transpileModule(src, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 } }).outputText;
+const m = { exports: {} };
+new Function('module', 'exports', out)(m, m.exports);
+const f = m.exports.formatINR;
+console.log('formatINR(1800)  =', JSON.stringify(f(1800)));
+console.log('formatINR(60000) =', JSON.stringify(f(60000)));
+console.log('formatINR(45000) =', JSON.stringify(f(45000)));

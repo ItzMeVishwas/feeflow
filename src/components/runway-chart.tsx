@@ -50,6 +50,15 @@ function shortDate(iso: string): string {
   return format(parseIso(iso), "d MMM");
 }
 
+// Compact rupee label for chart axes: ₹60k, ₹45k, -₹5k. Small values stay whole.
+function formatCompactINR(v: number): string {
+  if (v === 0) return "₹0";
+  const sign = v < 0 ? "-" : "";
+  const abs = Math.abs(v);
+  if (abs >= 1000) return sign + "₹" + Math.round(abs / 1000) + "k";
+  return sign + "₹" + abs.toLocaleString("en-IN");
+}
+
 function RunwayTooltip({
   active,
   payload,
@@ -190,7 +199,7 @@ export function RunwayChart({ scenario }: RunwayChartProps) {
                   minTickGap={16}
                 />
                 <YAxis
-                  tickFormatter={(v: number) => formatINR(v)}
+                  tickFormatter={formatCompactINR}
                   tick={{ fontSize: 11, fill: MUTED }}
                   tickLine={false}
                   axisLine={false}
@@ -208,7 +217,7 @@ export function RunwayChart({ scenario }: RunwayChartProps) {
                   strokeWidth={2}
                   fill="url(#runwayFill)"
                   isAnimationActive={!prefersReducedMotion}
-                  animationDuration={900}
+                  animationDuration={1200}
                   animationEasing="ease-out"
                 />
                 {lowest && (

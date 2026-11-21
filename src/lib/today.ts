@@ -1,4 +1,3 @@
-import { formatINR } from "@/lib/format"
 import { daysLate, deriveStatus } from "@/lib/invoice-status"
 import type { Bill, Invoice, Student } from "@/lib/store"
 
@@ -23,6 +22,8 @@ const MAX_ACTIONS = 5
 const BILL_WINDOW_DAYS = 7
 const CASH_WINDOW_DAYS = 30
 const DAY_MS = 86_400_000
+
+const wholeRupeeFormatter = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 })
 
 const shortDateFormatter = new Intl.DateTimeFormat("en-IN", {
   day: "numeric",
@@ -65,7 +66,7 @@ export function buildToday(input: TodayInput): TodayAction[] {
       id: `chase-${invoice.id}`,
       kind: "chase",
       title: `Chase ${name}`,
-      detail: `${formatINR(invoice.amount)}, ${late} ${late === 1 ? "day" : "days"} late`,
+      detail: `${wholeRupeeFormatter.format(invoice.amount)}, ${late} ${late === 1 ? "day" : "days"} late`,
       invoiceId: invoice.id,
       urgency: 100 + late,
     })
@@ -78,7 +79,7 @@ export function buildToday(input: TodayInput): TodayAction[] {
       id: `bill-${bill.id}`,
       kind: "bill",
       title: `${bill.name} ${dueText(days)}`,
-      detail: formatINR(bill.amount),
+      detail: wholeRupeeFormatter.format(bill.amount),
       urgency: 50 - days,
     })
   }

@@ -252,10 +252,10 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8">
       <section aria-label="Overview" className="grid items-stretch gap-4 lg:grid-cols-3">
-        <div className="glass h-full rounded-3xl p-4 sm:p-6 lg:col-span-2">
+        <div className="h-full lg:col-span-2">
           <RunwayChart />
         </div>
-        <div className="glass h-full rounded-2xl p-4 sm:p-6">
+        <div className="h-full">
           <TodayRail />
         </div>
       </section>

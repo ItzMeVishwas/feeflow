@@ -11,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { buildPayUrl } from "@/lib/pay-link"
 import { useStore, type Invoice, type Student } from "@/lib/store"
 
 type Tone = "friendly" | "firm" | "final"
@@ -60,7 +61,7 @@ type DraftInput = {
   month: string
   amount: number
   daysLate: number
-  upiId: string
+  payUrl: string
 }
 
 function buildDraft({
@@ -71,7 +72,7 @@ function buildDraft({
   month,
   amount,
   daysLate,
-  upiId,
+  payUrl,
 }: DraftInput): string {
   const parent = parentName.trim() || "Parent"
   const monthText = formatMonth(month)
@@ -100,12 +101,8 @@ function buildDraft({
   }
 
   const lines = [body]
-  const trimmedUpi = upiId.trim()
-  if (trimmedUpi) {
-    const note = `${studentName} ${monthText} fee`
-    lines.push(
-      `Pay via UPI: upi://pay?pa=${encodeURIComponent(trimmedUpi)}&am=${amount}&tn=${encodeURIComponent(note)}`,
-    )
+  if (payUrl) {
+    lines.push(`Pay here in one tap: ${payUrl}`)
   }
   return lines.join("\n\n")
 }
@@ -126,12 +123,29 @@ export function ReminderDialog({
   onClose,
 }: ReminderDialogProps) {
   const incrementRemindersSent = useStore((s) => s.incrementRemindersSent)
+  const tutorName = useStore((s) => s.settings.tutorName)
 
   const [tone, setTone] = useState<Tone>("friendly")
   const [language, setLanguage] = useState<Language>("english")
   const [draft, setDraft] = useState("")
 
   const daysLate = getDaysLate(invoice.dueDate)
+  const paid = (invoice.payments ?? []).reduce((sum, p) => sum + p.amount, 0)
+  const amountDue = Math.max(0, invoice.amount - paid)
+  const payUrl =
+    typeof window !== "undefined" && upiId.trim() && student
+      ? buildPayUrl({
+          tutorName,
+          upiId: upiId.trim(),
+          studentName: student.name,
+          parentName: student.parentName,
+          month: invoice.month,
+          amount: invoice.amount,
+          amountDue,
+          dueDate: invoice.dueDate,
+          invoiceId: invoice.id,
+        })
+      : ""
   const generated = student
     ? buildDraft({
         tone,
@@ -141,7 +155,7 @@ export function ReminderDialog({
         month: invoice.month,
         amount: invoice.amount,
         daysLate,
-        upiId,
+        payUrl,
       })
     : ""
 

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, type FormEvent } from "react"
+import { useEffect, useState, type FormEvent } from "react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -49,6 +49,24 @@ function ProfileForm() {
     settings.reminderLanguage ?? "english",
   )
   const [cashError, setCashError] = useState<string | null>(null)
+  // Zustand persist rehydrates after the first render, so the seeded values above can be stale.
+  const [hydrated, setHydrated] = useState(false)
+  // True once the user edits a field; blocks the re-sync so their input is never overwritten.
+  const [dirty, setDirty] = useState(false)
+
+  useEffect(() => {
+    if (useStore.persist.hasHydrated()) setHydrated(true)
+    return useStore.persist.onFinishHydration(() => setHydrated(true))
+  }, [])
+
+  useEffect(() => {
+    if (!hydrated || dirty) return
+    const saved = useStore.getState().settings
+    setTutorName(saved.tutorName)
+    setUpiId(saved.upiId)
+    setCashInput(String(saved.startingCashBalance))
+    setReminderLanguage(saved.reminderLanguage ?? "english")
+  }, [hydrated, dirty])
 
   const parsedCash = cashInput.trim() === "" ? NaN : Number(cashInput)
   const cashValid = Number.isFinite(parsedCash) && parsedCash >= 0
@@ -67,6 +85,7 @@ function ProfileForm() {
       reminderLanguage,
     })
     toast.success("Settings saved")
+    setDirty(false)
   }
 
   return (
@@ -82,7 +101,10 @@ function ProfileForm() {
             type="text"
             autoComplete="name"
             value={tutorName}
-            onChange={(e) => setTutorName(e.target.value)}
+            onChange={(e) => {
+              setTutorName(e.target.value)
+              setDirty(true)
+            }}
             className={fieldClass}
           />
         </div>
@@ -95,7 +117,10 @@ function ProfileForm() {
             autoComplete="off"
             spellCheck={false}
             value={upiId}
-            onChange={(e) => setUpiId(e.target.value)}
+            onChange={(e) => {
+              setUpiId(e.target.value)
+              setDirty(true)
+            }}
             className={fieldClass}
           />
         </div>
@@ -111,6 +136,7 @@ function ProfileForm() {
             value={cashInput}
             onChange={(e) => {
               setCashInput(e.target.value)
+              setDirty(true)
               if (cashError) setCashError(null)
             }}
             aria-invalid={cashError ? true : undefined}
@@ -133,7 +159,10 @@ function ProfileForm() {
           <select
             id="reminder-language"
             value={reminderLanguage}
-            onChange={(e) => setReminderLanguage(e.target.value as ReminderLanguage)}
+            onChange={(e) => {
+              setReminderLanguage(e.target.value as ReminderLanguage)
+              setDirty(true)
+            }}
             className={selectClass}
           >
             <option value="english" className="bg-popover text-popover-foreground">

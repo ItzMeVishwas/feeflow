@@ -112,6 +112,7 @@ function RecordPaymentBody({ invoice, student, tutorName, onDone }: RecordPaymen
       ? formatINR(amount, { wholeRupees: true })
       : formatINR(amount)
     toast.success(`${label} recorded for ${student.name}`, {
+      duration: 8000,
       action: newPayment
         ? {
             label: "Undo",

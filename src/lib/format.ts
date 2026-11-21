@@ -9,10 +9,10 @@ const inrWholeFormatter = new Intl.NumberFormat("en-IN", {
   maximumFractionDigits: 0,
 })
 
-// Formats a number as Indian rupees, e.g. 150000 -> "₹1,50,000.00".
-// Pass { wholeRupees: true } for "₹1,50,000" (paise dropped).
 export function formatINR(amount: number, options?: { wholeRupees?: boolean }): string {
-  return options?.wholeRupees ? inrWholeFormatter.format(amount) : inrFormatter.format(amount)
+  if (options?.wholeRupees) return inrWholeFormatter.format(amount)
+  const paise = Math.round(Math.abs(amount) * 100) % 100
+  return paise === 0 ? inrWholeFormatter.format(amount) : inrFormatter.format(amount)
 }
 
 

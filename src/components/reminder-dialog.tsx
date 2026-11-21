@@ -11,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { formatINR } from "@/lib/format"
 import { buildPayUrl } from "@/lib/pay-link"
 import { useStore, type Invoice, type Student } from "@/lib/store"
 
@@ -59,7 +60,7 @@ type DraftInput = {
   parentName: string
   studentName: string
   month: string
-  amount: number
+  amountDue: number
   daysLate: number
   payUrl: string
 }
@@ -70,13 +71,13 @@ function buildDraft({
   parentName,
   studentName,
   month,
-  amount,
+  amountDue,
   daysLate,
   payUrl,
 }: DraftInput): string {
   const parent = parentName.trim() || "Parent"
   const monthText = formatMonth(month)
-  const amountText = `₹${amount.toLocaleString("en-IN")}`
+  const amountText = formatINR(amountDue)
   const late = Math.max(0, daysLate)
   const lateEn = late > 0 ? `${late} day${late === 1 ? "" : "s"} overdue` : "due today"
   const lateHi = late > 0 ? `${late} din se pending` : "aaj due hai"
@@ -153,7 +154,7 @@ export function ReminderDialog({
         parentName: student.parentName,
         studentName: student.name,
         month: invoice.month,
-        amount: invoice.amount,
+        amountDue: amountDue,
         daysLate,
         payUrl,
       })

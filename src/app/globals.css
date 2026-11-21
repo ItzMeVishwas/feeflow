@@ -196,6 +196,19 @@
   .assistant-orb {
     animation: assistant-spin 12s linear infinite;
   }
+  /* Landing page hero: three blurred blobs drifting slowly */
+  .aurora-blob {
+    animation: aurora-drift 22s ease-in-out infinite alternate;
+    will-change: transform;
+  }
+  .aurora-blob-delayed {
+    animation-delay: -8s;
+    animation-duration: 26s;
+  }
+  .aurora-blob-slow {
+    animation-delay: -4s;
+    animation-duration: 30s;
+  }
 
 }
 
@@ -205,8 +218,25 @@
   }
 }
 
+@keyframes aurora-drift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(3rem, -2rem, 0) scale(1.08);
+  }
+  100% {
+    transform: translate3d(-2rem, 2.5rem, 0) scale(0.96);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .assistant-orb {
+    animation: none;
+  }
+  .aurora-blob,
+  .aurora-blob-delayed,
+  .aurora-blob-slow {
     animation: none;
   }
 }

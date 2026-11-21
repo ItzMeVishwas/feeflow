@@ -4,7 +4,9 @@ import { useMemo, useState, useSyncExternalStore } from "react"
 import { motion, useReducedMotion } from "motion/react"
 
 import { Button } from "@/components/ui/button"
+import { ChaseQueueDialog } from "@/components/chase-queue-dialog"
 import { ReminderDialog } from "@/components/reminder-dialog"
+import { buildChaseQueue } from "@/lib/chase"
 import { buildForecast, summarizeForecast } from "@/lib/forecast"
 import { toIsoDate } from "@/lib/invoice-status"
 import { useStore } from "@/lib/store"
@@ -31,8 +33,14 @@ export function TodayRail() {
   const bills = useStore((s) => s.bills)
   const settings = useStore((s) => s.settings)
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null)
+  const [chaseOpen, setChaseOpen] = useState(false)
 
   const today = toIsoDate(new Date())
+
+  const chaseQueue = useMemo(
+    () => buildChaseQueue({ students, invoices, bills, settings }, today),
+    [students, invoices, bills, settings, today],
+  )
 
   const studentById = useMemo(
     () => new Map<string, Student>(students.map((s) => [s.id, s])),
@@ -69,6 +77,18 @@ export function TodayRail() {
       >
         Today
       </h2>
+
+      {mounted && chaseQueue.length > 0 && (
+        <Button
+          type="button"
+          size="sm"
+          variant="default"
+          className="mt-3 w-full"
+          onClick={() => setChaseOpen(true)}
+        >
+          Chase all overdue ({chaseQueue.length})
+        </Button>
+      )}
 
       <div className="mt-4 flex-1">
         {!mounted ? (
@@ -142,6 +162,8 @@ export function TodayRail() {
           onClose={() => setSelectedInvoiceId(null)}
         />
       )}
+
+      <ChaseQueueDialog open={chaseOpen} onClose={() => setChaseOpen(false)} queue={chaseQueue} />
     </section>
   )
 }

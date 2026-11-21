@@ -24,6 +24,7 @@ export type Invoice = {
   status: InvoiceStatus
   paidDate: string | null
   remindersSent: number
+  lastRemindedAt?: string // ISO local date "YYYY-MM-DD" of the last reminder sent
   payments?: Payment[]
 }
 
@@ -75,6 +76,15 @@ const defaultSettings: Settings = {
   startingCashBalance: 0,
 }
 
+// Local calendar date as "YYYY-MM-DD" (not UTC, so it matches the user's day).
+function localIsoDate(date: Date): string {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, "0")
+  const d = String(date.getDate()).padStart(2, "0")
+  return `${y}-${m}-${d}`
+}
+
+
 // localStorage is only touched when the storage getter runs (inside the
 // browser), never at import time, so this stays safe during Next.js SSR.
 export const useStore = create<AppStore>()(
@@ -111,11 +121,14 @@ export const useStore = create<AppStore>()(
           invoices: state.invoices.filter((i) => i.id !== id),
         })),
       incrementRemindersSent: (id) =>
-        set((state) => ({
-          invoices: state.invoices.map((i) =>
-            i.id === id ? { ...i, remindersSent: i.remindersSent + 1 } : i,
-          ),
-        })),
+        set((state) => {
+          const today = localIsoDate(new Date())
+          return {
+            invoices: state.invoices.map((i) =>
+              i.id === id ? { ...i, remindersSent: i.remindersSent + 1, lastRemindedAt: today } : i,
+            ),
+          }
+        }),
       recordPayment: (invoiceId, amount, date) =>
         set((state) => {
           if (amount <= 0) return state

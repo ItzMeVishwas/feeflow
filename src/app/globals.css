@@ -47,6 +47,8 @@
   --color-overdue: var(--overdue);
   --color-overdue-text: var(--overdue-text);
   --color-due-soon: var(--due-soon);
+  --color-mint: var(--mint);
+  --color-coral: var(--coral);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -83,6 +85,8 @@
   --overdue: #FF6B6B;
   --overdue-text: #C2410C;
   --due-soon: #F2A93B;
+  --mint: #3DD9A8;
+  --coral: #FF6B6B;
   --glass-bg: rgba(255, 255, 255, 0.55);
   --glass-bg-strong: rgba(255, 255, 255, 0.75);
   --glass-border: rgba(255, 255, 255, 0.70);
@@ -131,6 +135,8 @@
   --overdue: #FF6B6B;
   --overdue-text: #FF6B6B;
   --due-soon: #F2A93B;
+  --mint: #3DD9A8;
+  --coral: #FF6B6B;
   --glass-bg: rgba(255, 255, 255, 0.06);
   --glass-bg-strong: rgba(255, 255, 255, 0.10);
   --glass-border: rgba(255, 255, 255, 0.10);

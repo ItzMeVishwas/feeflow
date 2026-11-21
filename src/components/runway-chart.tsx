@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import {
   Area,
   AreaChart,
+  Line,
   ReferenceDot,
   ReferenceLine,
   ResponsiveContainer,
@@ -21,7 +22,14 @@ import {
 import { useStore } from "@/lib/store";
 import { formatINR } from "@/lib/format";
 
-export type RunwayChartProps = { scenario?: ForecastScenario };
+export type RunwayChartProps = {
+  scenario?: ForecastScenario;
+  // Pass both to control the horizon from the parent. Without them the chart keeps its own (starts at 30 days).
+  horizon?: Horizon;
+  onHorizonChange?: (horizon: Horizon) => void;
+  // With a scenario, also draw the forecast without it as a faint line.
+  showBaseline?: boolean;
+};
 
 type Horizon = 30 | 60 | 90;
 const HORIZONS: Horizon[] = [30, 60, 90];
@@ -36,6 +44,7 @@ const MUTED = "var(--muted-foreground)";
 type ChartPoint = {
   date: string;
   balance: number;
+  baseline?: number;
   label: string;
   events: ForecastEvent[];
 };
@@ -86,13 +95,20 @@ function RunwayTooltip({
   );
 }
 
-export function RunwayChart({ scenario }: RunwayChartProps) {
+export function RunwayChart({
+  scenario,
+  horizon: controlledHorizon,
+  onHorizonChange,
+  showBaseline = false,
+}: RunwayChartProps) {
   const students = useStore((s) => s.students);
   const invoices = useStore((s) => s.invoices);
   const bills = useStore((s) => s.bills);
   const settings = useStore((s) => s.settings);
 
-  const [horizon, setHorizon] = useState<Horizon>(30);
+  const [localHorizon, setLocalHorizon] = useState<Horizon>(30);
+  const horizon = controlledHorizon ?? localHorizon;
+  const setHorizon = onHorizonChange ?? setLocalHorizon;
   const [prefersReducedMotion] = useState<boolean>(
     () =>
       typeof window !== "undefined" &&
@@ -100,26 +116,34 @@ export function RunwayChart({ scenario }: RunwayChartProps) {
       window.matchMedia("(prefers-reduced-motion: reduce)").matches,
   );
 
+  const drawBaseline = showBaseline && scenario !== undefined;
+
   const points = useMemo(
     () => buildForecast({ students, invoices, bills, settings }, horizon, scenario),
     [students, invoices, bills, settings, horizon, scenario],
+  );
+  const baselinePoints = useMemo(
+    () => (drawBaseline ? buildForecast({ students, invoices, bills, settings }, horizon) : null),
+    [drawBaseline, students, invoices, bills, settings, horizon],
   );
   const summary = useMemo(() => summarizeForecast(points), [points]);
 
   const chartData: ChartPoint[] = useMemo(
     () =>
-      points.map((p) => ({
+      points.map((p, i) => ({
         date: p.date,
         balance: p.balance,
+        baseline: baselinePoints?.[i]?.balance,
         label: shortDate(p.date),
         events: p.events,
       })),
-    [points],
+    [points, baselinePoints],
   );
 
   // Fraction (0..1) from the top of the chart where balance = 0, for the split gradient.
+  // The baseline is included so the zero split matches the full y-axis range.
   const zeroOffset = useMemo(() => {
-    const values = chartData.map((p) => p.balance);
+    const values = chartData.flatMap((p) => [p.balance, p.baseline ?? p.balance]);
     const max = Math.max(0, ...values);
     const min = Math.min(0, ...values);
     return max === min ? 0 : max / (max - min);
@@ -220,6 +244,20 @@ export function RunwayChart({ scenario }: RunwayChartProps) {
                   animationDuration={1200}
                   animationEasing="ease-out"
                 />
+                {baselinePoints && (
+                  <Line
+                    type="monotone"
+                    dataKey="baseline"
+                    name="Without changes"
+                    stroke={MUTED}
+                    strokeOpacity={0.7}
+                    strokeWidth={1.5}
+                    strokeDasharray="4 3"
+                    dot={false}
+                    activeDot={false}
+                    isAnimationActive={false}
+                  />
+                )}
                 {lowest && (
                   <ReferenceDot
                     x={shortDate(lowest.date)}

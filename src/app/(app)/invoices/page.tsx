@@ -31,7 +31,7 @@ const BADGE_CLASS: Record<DisplayStatus, string> = {
 }
 
 const FOCUS_RING =
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2"
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
 
 // Subscribed to nothing; used only to detect the client after hydration.
 const subscribeNoop = () => () => {}
@@ -130,26 +130,26 @@ export default function InvoicesPage() {
   }
 
   if (!mounted) {
-    return <p className="text-sm text-neutral-500">Loading invoices…</p>
+    return <p className="text-sm text-muted-foreground">Loading invoices…</p>
   }
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
           Invoices
         </h1>
         <button
           type="button"
           onClick={handleGenerate}
-          className={`rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 ${FOCUS_RING}`}
+          className={`rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 ${FOCUS_RING}`}
         >
           Generate this month&apos;s invoices
         </button>
       </div>
 
       {message && (
-        <p role="status" className="text-sm text-neutral-700">
+        <p role="status" className="text-sm text-muted-foreground">
           {message}
         </p>
       )}
@@ -165,8 +165,8 @@ export default function InvoicesPage() {
               onClick={() => setFilter(f.value)}
               className={`rounded-md border px-3 py-1.5 text-sm font-medium ${FOCUS_RING} ${
                 pressed
-                  ? "border-neutral-900 bg-neutral-900 text-white"
-                  : "border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50"
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-card text-foreground hover:bg-muted"
               }`}
             >
               {f.label}{" "}
@@ -177,16 +177,16 @@ export default function InvoicesPage() {
       </div>
 
       {invoices.length === 0 ? (
-        <p className="text-sm text-neutral-600">
+        <p className="text-sm text-muted-foreground">
           No invoices yet. Use Generate this month&apos;s invoices to create them from your
           active students.
         </p>
       ) : visibleRows.length === 0 ? (
-        <p className="text-sm text-neutral-600">No {filter} invoices.</p>
+        <p className="text-sm text-muted-foreground">No {filter} invoices.</p>
       ) : (
-        <div className="overflow-x-auto rounded-md border border-neutral-200">
+        <div className="glass overflow-x-auto rounded-2xl">
           <table className="w-full text-left text-sm">
-            <thead className="bg-neutral-50 text-neutral-700">
+            <thead className="bg-muted text-muted-foreground">
               <tr>
                 <th scope="col" className="px-4 py-3 font-medium">Student</th>
                 <th scope="col" className="px-4 py-3 font-medium">Month</th>
@@ -198,15 +198,15 @@ export default function InvoicesPage() {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-200">
+            <tbody className="divide-y divide-border">
               {visibleRows.map(({ invoice, studentName, status }) => (
                 <tr key={invoice.id}>
-                  <td className="px-4 py-3 text-neutral-900">{studentName}</td>
-                  <td className="px-4 py-3 text-neutral-700">{formatMonth(invoice.month)}</td>
-                  <td className="px-4 py-3 tabular-nums text-neutral-900">
+                  <td className="px-4 py-3 text-foreground">{studentName}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{formatMonth(invoice.month)}</td>
+                  <td className="px-4 py-3 tabular-nums text-foreground">
                     {formatINR(invoice.amount)}
                   </td>
-                  <td className="px-4 py-3 text-neutral-700">{formatDate(invoice.dueDate)}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{formatDate(invoice.dueDate)}</td>
                   <td className="px-4 py-3">
                     <span
                       className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${BADGE_CLASS[status]}`}
@@ -221,7 +221,7 @@ export default function InvoicesPage() {
                           type="button"
                           aria-label={`Send a WhatsApp reminder for ${studentName}'s ${formatMonth(invoice.month)} invoice`}
                           onClick={() => setReminderInvoice(invoice)}
-                          className={`rounded-md border border-neutral-300 bg-white px-3 py-1 text-sm font-medium text-neutral-800 hover:bg-neutral-50 ${FOCUS_RING}`}
+                          className={`rounded-md border border-border bg-card px-3 py-1 text-sm font-medium text-foreground hover:bg-muted ${FOCUS_RING}`}
                         >
                           Remind
                         </button>
@@ -233,7 +233,7 @@ export default function InvoicesPage() {
                           onClick={() =>
                             updateInvoice(invoice.id, { status: "paid", paidDate: today })
                           }
-                          className={`rounded-md border border-neutral-300 bg-white px-3 py-1 text-sm font-medium text-neutral-800 hover:bg-neutral-50 ${FOCUS_RING}`}
+                          className={`rounded-md border border-border bg-card px-3 py-1 text-sm font-medium text-foreground hover:bg-muted ${FOCUS_RING}`}
                         >
                           Mark as paid
                         </button>

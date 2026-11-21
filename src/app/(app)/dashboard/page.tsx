@@ -27,9 +27,9 @@ type OwedRow = {
 
 function StatCard({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-md border border-neutral-200 bg-white p-4">
-      <p className="text-sm text-neutral-600">{label}</p>
-      <p className="mt-1 text-2xl font-semibold tabular-nums text-neutral-900">
+    <div className="glass rounded-2xl p-4">
+      <p className="text-sm text-muted-foreground">{label}</p>
+      <p className="mt-1 text-2xl font-semibold tabular-nums text-foreground">
         {formatINR(value)}
       </p>
     </div>
@@ -46,9 +46,9 @@ function OwedTable({
   onRemind: (invoiceId: string) => void
 }) {
   return (
-    <div className="overflow-x-auto rounded-md border border-neutral-200">
+    <div className="glass overflow-x-auto rounded-2xl">
       <table className="w-full text-left text-sm">
-        <thead className="bg-neutral-50 text-neutral-700">
+        <thead className="bg-muted text-muted-foreground">
           <tr>
             <th scope="col" className="px-4 py-3 font-medium">Student</th>
             <th scope="col" className="px-4 py-3 font-medium">Parent</th>
@@ -58,16 +58,16 @@ function OwedTable({
             <th scope="col" className="px-4 py-3 font-medium">Action</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-neutral-200">
+        <tbody className="divide-y divide-border">
           {rows.map(({ invoice, studentName, parentName, days }) => (
             <tr key={invoice.id}>
-              <td className="px-4 py-3 text-neutral-900">{studentName}</td>
-              <td className="px-4 py-3 text-neutral-700">{parentName}</td>
-              <td className="px-4 py-3 tabular-nums text-neutral-900">
+              <td className="px-4 py-3 text-foreground">{studentName}</td>
+              <td className="px-4 py-3 text-muted-foreground">{parentName}</td>
+              <td className="px-4 py-3 tabular-nums text-foreground">
                 {formatINR(invoice.amount)}
               </td>
-              <td className="px-4 py-3 tabular-nums text-neutral-700">{days}</td>
-              <td className="px-4 py-3 tabular-nums text-neutral-700">
+              <td className="px-4 py-3 tabular-nums text-muted-foreground">{days}</td>
+              <td className="px-4 py-3 tabular-nums text-muted-foreground">
                 {invoice.remindersSent}
               </td>
               <td className="px-4 py-3">
@@ -175,12 +175,12 @@ export default function DashboardPage() {
   )
 
   if (!mounted) {
-    return <p className="text-sm text-neutral-500">Loading dashboard…</p>
+    return <p className="text-sm text-muted-foreground">Loading dashboard…</p>
   }
 
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">
+      <h1 className="text-2xl font-semibold tracking-tight text-foreground">
         Dashboard
       </h1>
 
@@ -191,16 +191,16 @@ export default function DashboardPage() {
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold tracking-tight text-neutral-900">Who owes me</h2>
+        <h2 className="text-lg font-semibold tracking-tight text-foreground">Who owes me</h2>
 
         {owedRows.length === 0 && upcomingRows.length === 0 ? (
-          <p className="text-sm text-neutral-600">
+          <p className="text-sm text-muted-foreground">
             No unpaid invoices. Nothing is owed right now.
           </p>
         ) : (
           groups.map((group) => (
             <div key={group.label} className="space-y-2">
-              <h3 className="text-sm font-medium text-neutral-700">{group.label}</h3>
+              <h3 className="text-sm font-medium text-muted-foreground">{group.label}</h3>
               <OwedTable rows={group.rows} showRemind onRemind={setRemindInvoiceId} />
             </div>
           ))
@@ -208,7 +208,7 @@ export default function DashboardPage() {
 
         {upcomingRows.length > 0 && (
           <div className="space-y-2">
-            <h3 className="text-sm font-medium text-neutral-700">Upcoming</h3>
+            <h3 className="text-sm font-medium text-muted-foreground">Upcoming</h3>
             <OwedTable rows={upcomingRows} showRemind={false} onRemind={setRemindInvoiceId} />
           </div>
         )}

@@ -1,0 +1,131 @@
+import { create } from "zustand"
+import { createJSONStorage, persist } from "zustand/middleware"
+
+export type Student = {
+  id: string
+  name: string
+  parentName: string
+  parentPhone: string
+  monthlyFee: number
+  batch: string
+  active: boolean
+}
+
+export type InvoiceStatus = "unpaid" | "paid" | "overdue"
+
+export type Invoice = {
+  id: string
+  studentId: string
+  amount: number
+  month: string // "YYYY-MM"
+  dueDate: string // ISO date
+  status: InvoiceStatus
+  paidDate: string | null
+  remindersSent: number
+}
+
+export type Bill = {
+  id: string
+  name: string
+  amount: number
+  dueDate: string // ISO date
+  recurringMonthly: boolean
+}
+
+export type Settings = {
+  tutorName: string
+  upiId: string
+  startingCashBalance: number
+}
+
+export type AppState = {
+  students: Student[]
+  invoices: Invoice[]
+  bills: Bill[]
+  settings: Settings
+}
+
+export type AppActions = {
+  addStudent: (student: Omit<Student, "id">) => void
+  updateStudent: (id: string, patch: Partial<Omit<Student, "id">>) => void
+  removeStudent: (id: string) => void
+
+  addInvoice: (invoice: Omit<Invoice, "id">) => void
+  updateInvoice: (id: string, patch: Partial<Omit<Invoice, "id">>) => void
+  removeInvoice: (id: string) => void
+
+  addBill: (bill: Omit<Bill, "id">) => void
+  updateBill: (id: string, patch: Partial<Omit<Bill, "id">>) => void
+  removeBill: (id: string) => void
+
+  updateSettings: (patch: Partial<Settings>) => void
+}
+
+export type AppStore = AppState & AppActions
+
+const defaultSettings: Settings = {
+  tutorName: "",
+  upiId: "",
+  startingCashBalance: 0,
+}
+
+// localStorage is only touched when the storage getter runs (inside the
+// browser), never at import time, so this stays safe during Next.js SSR.
+export const useStore = create<AppStore>()(
+  persist(
+    (set) => ({
+      students: [],
+      invoices: [],
+      bills: [],
+      settings: defaultSettings,
+
+      addStudent: (student) =>
+        set((state) => ({
+          students: [...state.students, { ...student, id: crypto.randomUUID() }],
+        })),
+      updateStudent: (id, patch) =>
+        set((state) => ({
+          students: state.students.map((s) => (s.id === id ? { ...s, ...patch } : s)),
+        })),
+      removeStudent: (id) =>
+        set((state) => ({
+          students: state.students.filter((s) => s.id !== id),
+        })),
+
+      addInvoice: (invoice) =>
+        set((state) => ({
+          invoices: [...state.invoices, { ...invoice, id: crypto.randomUUID() }],
+        })),
+      updateInvoice: (id, patch) =>
+        set((state) => ({
+          invoices: state.invoices.map((i) => (i.id === id ? { ...i, ...patch } : i)),
+        })),
+      removeInvoice: (id) =>
+        set((state) => ({
+          invoices: state.invoices.filter((i) => i.id !== id),
+        })),
+
+      addBill: (bill) =>
+        set((state) => ({
+          bills: [...state.bills, { ...bill, id: crypto.randomUUID() }],
+        })),
+      updateBill: (id, patch) =>
+        set((state) => ({
+          bills: state.bills.map((b) => (b.id === id ? { ...b, ...patch } : b)),
+        })),
+      removeBill: (id) =>
+        set((state) => ({
+          bills: state.bills.filter((b) => b.id !== id),
+        })),
+
+      updateSettings: (patch) =>
+        set((state) => ({
+          settings: { ...state.settings, ...patch },
+        })),
+    }),
+    {
+      name: "feeflow-store",
+      storage: createJSONStorage(() => localStorage),
+    },
+  ),
+)

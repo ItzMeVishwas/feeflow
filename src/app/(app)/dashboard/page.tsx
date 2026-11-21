@@ -1,7 +1,9 @@
 "use client"
 
-import { useMemo, useSyncExternalStore } from "react"
+import { useMemo, useState, useSyncExternalStore } from "react"
 
+import { Button } from "@/components/ui/button"
+import { ReminderDialog } from "@/components/reminder-dialog"
 import { formatINR } from "@/lib/format"
 import { useStore } from "@/lib/store"
 import type { Invoice, Student } from "@/lib/store"
@@ -34,6 +36,55 @@ function StatCard({ label, value }: { label: string; value: number }) {
   )
 }
 
+function OwedTable({
+  rows,
+  showRemind,
+  onRemind,
+}: {
+  rows: OwedRow[]
+  showRemind: boolean
+  onRemind: (invoiceId: string) => void
+}) {
+  return (
+    <div className="overflow-x-auto rounded-md border border-neutral-200">
+      <table className="w-full text-left text-sm">
+        <thead className="bg-neutral-50 text-neutral-700">
+          <tr>
+            <th scope="col" className="px-4 py-3 font-medium">Student</th>
+            <th scope="col" className="px-4 py-3 font-medium">Parent</th>
+            <th scope="col" className="px-4 py-3 font-medium">Amount</th>
+            <th scope="col" className="px-4 py-3 font-medium">Days late</th>
+            <th scope="col" className="px-4 py-3 font-medium">Reminders sent</th>
+            <th scope="col" className="px-4 py-3 font-medium">Action</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-neutral-200">
+          {rows.map(({ invoice, studentName, parentName, days }) => (
+            <tr key={invoice.id}>
+              <td className="px-4 py-3 text-neutral-900">{studentName}</td>
+              <td className="px-4 py-3 text-neutral-700">{parentName}</td>
+              <td className="px-4 py-3 tabular-nums text-neutral-900">
+                {formatINR(invoice.amount)}
+              </td>
+              <td className="px-4 py-3 tabular-nums text-neutral-700">{days}</td>
+              <td className="px-4 py-3 tabular-nums text-neutral-700">
+                {invoice.remindersSent}
+              </td>
+              <td className="px-4 py-3">
+                {showRemind && (
+                  <Button type="button" onClick={() => onRemind(invoice.id)}>
+                    Remind
+                  </Button>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
 export default function DashboardPage() {
   // Zustand persist reads localStorage on the client only, so the server HTML
   // would not match the first client render. Wait for mount before showing data.
@@ -45,6 +96,8 @@ export default function DashboardPage() {
 
   const students = useStore((s) => s.students)
   const invoices = useStore((s) => s.invoices)
+  const upiId = useStore((s) => s.settings.upiId)
+  const [remindInvoiceId, setRemindInvoiceId] = useState<string | null>(null)
 
   const today = toIsoDate(new Date())
   const currentMonth = today.slice(0, 7) // "YYYY-MM"
@@ -74,7 +127,7 @@ export default function DashboardPage() {
 
   const owedRows = useMemo(() => {
     const rows: OwedRow[] = invoices
-      .filter((inv) => inv.status !== "paid")
+      .filter((inv) => deriveStatus(inv, today) === "overdue")
       .map((invoice) => {
         const student = studentById.get(invoice.studentId)
         return {
@@ -100,6 +153,27 @@ export default function DashboardPage() {
     [owedRows],
   )
 
+  const upcomingRows = useMemo(() => {
+    const rows: OwedRow[] = invoices
+      .filter((inv) => deriveStatus(inv, today) === "due")
+      .map((invoice) => {
+        const student = studentById.get(invoice.studentId)
+        return {
+          invoice,
+          studentName: student?.name ?? "Unknown student",
+          parentName: student?.parentName ?? "",
+          days: daysLate(invoice.dueDate, today),
+        }
+      })
+    rows.sort((a, b) => a.invoice.dueDate.localeCompare(b.invoice.dueDate))
+    return rows
+  }, [invoices, studentById, today])
+
+  const selectedInvoice = useMemo(
+    () => invoices.find((inv) => inv.id === remindInvoiceId) ?? null,
+    [invoices, remindInvoiceId],
+  )
+
   if (!mounted) {
     return <p className="text-sm text-neutral-500">Loading dashboard…</p>
   }
@@ -119,7 +193,7 @@ export default function DashboardPage() {
       <section className="space-y-4">
         <h2 className="text-lg font-semibold tracking-tight text-neutral-900">Who owes me</h2>
 
-        {owedRows.length === 0 ? (
+        {owedRows.length === 0 && upcomingRows.length === 0 ? (
           <p className="text-sm text-neutral-600">
             No unpaid invoices. Nothing is owed right now.
           </p>
@@ -127,38 +201,29 @@ export default function DashboardPage() {
           groups.map((group) => (
             <div key={group.label} className="space-y-2">
               <h3 className="text-sm font-medium text-neutral-700">{group.label}</h3>
-              <div className="overflow-x-auto rounded-md border border-neutral-200">
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-neutral-50 text-neutral-700">
-                    <tr>
-                      <th scope="col" className="px-4 py-3 font-medium">Student</th>
-                      <th scope="col" className="px-4 py-3 font-medium">Parent</th>
-                      <th scope="col" className="px-4 py-3 font-medium">Amount</th>
-                      <th scope="col" className="px-4 py-3 font-medium">Days late</th>
-                      <th scope="col" className="px-4 py-3 font-medium">Reminders sent</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-neutral-200">
-                    {group.rows.map(({ invoice, studentName, parentName, days }) => (
-                      <tr key={invoice.id}>
-                        <td className="px-4 py-3 text-neutral-900">{studentName}</td>
-                        <td className="px-4 py-3 text-neutral-700">{parentName}</td>
-                        <td className="px-4 py-3 tabular-nums text-neutral-900">
-                          {formatINR(invoice.amount)}
-                        </td>
-                        <td className="px-4 py-3 tabular-nums text-neutral-700">{days}</td>
-                        <td className="px-4 py-3 tabular-nums text-neutral-700">
-                          {invoice.remindersSent}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <OwedTable rows={group.rows} showRemind onRemind={setRemindInvoiceId} />
             </div>
           ))
         )}
+
+        {upcomingRows.length > 0 && (
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium text-neutral-700">Upcoming</h3>
+            <OwedTable rows={upcomingRows} showRemind={false} onRemind={setRemindInvoiceId} />
+          </div>
+        )}
+
+        {selectedInvoice && (
+          <ReminderDialog
+            invoice={selectedInvoice}
+            student={studentById.get(selectedInvoice.studentId)}
+            upiId={upiId}
+            open
+            onClose={() => setRemindInvoiceId(null)}
+          />
+        )}
       </section>
+
     </div>
   )
 }

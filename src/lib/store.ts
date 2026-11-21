@@ -53,6 +53,7 @@ export type AppActions = {
   addInvoice: (invoice: Omit<Invoice, "id">) => void
   updateInvoice: (id: string, patch: Partial<Omit<Invoice, "id">>) => void
   removeInvoice: (id: string) => void
+  incrementRemindersSent: (id: string) => void
 
   addBill: (bill: Omit<Bill, "id">) => void
   updateBill: (id: string, patch: Partial<Omit<Bill, "id">>) => void
@@ -103,6 +104,12 @@ export const useStore = create<AppStore>()(
       removeInvoice: (id) =>
         set((state) => ({
           invoices: state.invoices.filter((i) => i.id !== id),
+        })),
+      incrementRemindersSent: (id) =>
+        set((state) => ({
+          invoices: state.invoices.map((i) =>
+            i.id === id ? { ...i, remindersSent: i.remindersSent + 1 } : i,
+          ),
         })),
 
       addBill: (bill) =>

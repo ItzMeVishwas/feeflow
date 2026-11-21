@@ -3,6 +3,7 @@
 import { useMemo, useState, useSyncExternalStore } from "react"
 
 import { formatDate, formatINR, formatMonth } from "@/lib/format"
+import { ReminderDialog } from "@/components/reminder-dialog"
 import { useStore } from "@/lib/store"
 import type { Invoice } from "@/lib/store"
 import { deriveStatus, toIsoDate, type DisplayStatus } from "@/lib/invoice-status"
@@ -48,9 +49,11 @@ export default function InvoicesPage() {
   const invoices = useStore((s) => s.invoices)
   const addInvoice = useStore((s) => s.addInvoice)
   const updateInvoice = useStore((s) => s.updateInvoice)
+  const upiId = useStore((s) => s.settings.upiId)
 
   const [filter, setFilter] = useState<Filter>("all")
   const [message, setMessage] = useState("")
+  const [reminderInvoice, setReminderInvoice] = useState<Invoice | null>(null)
 
   const today = toIsoDate(new Date())
   const currentMonth = today.slice(0, 7) // "YYYY-MM"
@@ -212,24 +215,46 @@ export default function InvoicesPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right">
-                    {status !== "paid" && (
-                      <button
-                        type="button"
-                        aria-label={`Mark ${studentName}'s ${formatMonth(invoice.month)} invoice as paid`}
-                        onClick={() =>
-                          updateInvoice(invoice.id, { status: "paid", paidDate: today })
-                        }
-                        className={`rounded-md border border-neutral-300 bg-white px-3 py-1 text-sm font-medium text-neutral-800 hover:bg-neutral-50 ${FOCUS_RING}`}
-                      >
-                        Mark as paid
-                      </button>
-                    )}
+                    <div className="flex flex-wrap justify-end gap-2">
+                      {status === "overdue" && (
+                        <button
+                          type="button"
+                          aria-label={`Send a WhatsApp reminder for ${studentName}'s ${formatMonth(invoice.month)} invoice`}
+                          onClick={() => setReminderInvoice(invoice)}
+                          className={`rounded-md border border-neutral-300 bg-white px-3 py-1 text-sm font-medium text-neutral-800 hover:bg-neutral-50 ${FOCUS_RING}`}
+                        >
+                          Remind
+                        </button>
+                      )}
+                      {status !== "paid" && (
+                        <button
+                          type="button"
+                          aria-label={`Mark ${studentName}'s ${formatMonth(invoice.month)} invoice as paid`}
+                          onClick={() =>
+                            updateInvoice(invoice.id, { status: "paid", paidDate: today })
+                          }
+                          className={`rounded-md border border-neutral-300 bg-white px-3 py-1 text-sm font-medium text-neutral-800 hover:bg-neutral-50 ${FOCUS_RING}`}
+                        >
+                          Mark as paid
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+      )}
+
+      {reminderInvoice && (
+        <ReminderDialog
+          invoice={reminderInvoice}
+          student={students.find((s) => s.id === reminderInvoice.studentId)}
+          upiId={upiId}
+          open
+          onClose={() => setReminderInvoice(null)}
+        />
       )}
     </div>
   )

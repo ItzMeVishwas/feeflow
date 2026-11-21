@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FeeFlow
 
-## Getting Started
+FeeFlow is a fee and cash-flow back office for Indian home tutors. It tracks students, invoices, payments and bills, sends WhatsApp payment reminders with UPI pay links, and forecasts cash 90 days ahead. Built for the Codebenders ACE Builders Hackathon 2026 (Problem Statement 1, "The One-Person Back Office"). All data is stored in the browser (localStorage); there is no backend.
 
-First, run the development server:
+## Live features
 
-```bash
+- Dashboard with cash runway chart, Today rail of ranked actions, overdue and collection cards
+- Ctrl+K command palette with plain-language commands (e.g. "tara paid 1200 for oct")
+- Invoices: filters, generate this month's invoices, record and undo payments, WhatsApp reminders in English/Hinglish with auto tone (friendly, firm, final) via chase queue
+- Forecast: 90-day cash forecast with what-if scenarios and parent reliability badges
+- Bills: 60-day upcoming list with runway days, add/edit/delete
+- Public /pay page with UPI QR code and Pay button
+- Light/dark theme
+- Installable as a PWA (manifest + icons)
+
+Still in progress: Students page restyle and Settings page (placeholder).
+
+## Run locally
+
+Prerequisites: Node 20+ and git.
+
+```powershell
+git clone https://github.com/ItzMeVishwas/feeflow.git
+cd feeflow
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then open http://localhost:3000/dashboard. Demo data loads on first visit.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Tip: if `npm install` fails with ECONNRESET, force IPv4 first in the same terminal:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```powershell
+$env:NODE_OPTIONS="--dns-result-order=ipv4first"
+```
 
-## Learn More
+Other scripts: `npm run build`, `npm run start`, `npm run lint`.
 
-To learn more about Next.js, take a look at the following resources:
+## Documentation
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [HANDOFF.md](HANDOFF.md) — setup, stack and file map, and what's left
+- [PROMPTS.md](PROMPTS.md) — the prompts used to build each feature

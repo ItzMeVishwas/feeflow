@@ -10,7 +10,9 @@ let hasSeeded = false;
 function seedIfEmpty() {
   if (hasSeeded) return;
 
-  const { students, invoices, bills } = useStore.getState();
+  const { students, invoices, bills, settings } = useStore.getState();
+  // Once the user has completed onboarding, never reseed, even if they cleared all data.
+  if (settings.onboarded === true) return;
   if (students.length === 0 && invoices.length === 0 && bills.length === 0) {
     hasSeeded = true;
     seedDemoData();

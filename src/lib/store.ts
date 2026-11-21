@@ -1,5 +1,6 @@
 import { create } from "zustand"
 import { createJSONStorage, persist } from "zustand/middleware"
+import { seedDemoData } from "./seed"
 
 export type Student = {
   id: string
@@ -40,6 +41,8 @@ export type Settings = {
   tutorName: string
   upiId: string
   startingCashBalance: number
+  onboarded: boolean
+  reminderLanguage: "english" | "hinglish"
 }
 
 export type AppState = {
@@ -66,6 +69,9 @@ export type AppActions = {
   removeBill: (id: string) => void
 
   updateSettings: (patch: Partial<Settings>) => void
+
+  resetToDemo: () => void
+  clearAll: () => void
 }
 
 export type AppStore = AppState & AppActions
@@ -74,6 +80,8 @@ const defaultSettings: Settings = {
   tutorName: "",
   upiId: "",
   startingCashBalance: 0,
+  onboarded: false,
+  reminderLanguage: "english",
 }
 
 // Local calendar date as "YYYY-MM-DD" (not UTC, so it matches the user's day).
@@ -89,7 +97,7 @@ function localIsoDate(date: Date): string {
 // browser), never at import time, so this stays safe during Next.js SSR.
 export const useStore = create<AppStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       students: [],
       invoices: [],
       bills: [],
@@ -172,6 +180,16 @@ export const useStore = create<AppStore>()(
         set((state) => ({
           settings: { ...state.settings, ...patch },
         })),
+
+      // seedDemoData appends rows and also overwrites settings with demo values,
+      // so clear the data first and restore the user's settings afterwards.
+      resetToDemo: () => {
+        const { settings } = get()
+        set({ students: [], invoices: [], bills: [] })
+        seedDemoData()
+        set({ settings })
+      },
+      clearAll: () => set({ students: [], invoices: [], bills: [] }),
     }),
     {
       name: "feeflow-store",

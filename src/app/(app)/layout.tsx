@@ -1,5 +1,6 @@
 import { AppMobileNav, AppSidebar } from "@/components/app-sidebar"
 import { CommandPalette } from "@/components/command-palette"
+import OnboardingDialog from "@/components/onboarding-dialog"
 import { TopBar } from "@/components/top-bar"
 
 // No opaque background here, so the theme background and AppBackground
@@ -18,6 +19,7 @@ export default function AppLayout({
       </div>
       <AppMobileNav />
       <CommandPalette />
+      <OnboardingDialog />
     </div>
   )
 }

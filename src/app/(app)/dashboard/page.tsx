@@ -4,6 +4,8 @@ import { useMemo, useState, useSyncExternalStore } from "react"
 
 import { AnimatedNumber } from "@/components/ui/animated-number"
 import { Button } from "@/components/ui/button"
+import { CollectionsCard } from "@/components/collections-card"
+import { OnTimeRateCard } from "@/components/on-time-rate-card"
 import { Progress } from "@/components/ui/progress"
 import { ReminderDialog } from "@/components/reminder-dialog"
 import { RunwayChart } from "@/components/runway-chart"
@@ -252,8 +254,12 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8">
       <section aria-label="Overview" className="grid items-stretch gap-4 lg:grid-cols-3">
-        <div className="h-full lg:col-span-2">
+        <div className="h-full space-y-4 lg:col-span-2">
           <RunwayChart />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <OnTimeRateCard />
+            <CollectionsCard />
+          </div>
         </div>
         <div className="h-full">
           <TodayRail />

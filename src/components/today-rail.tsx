@@ -81,17 +81,6 @@ export function TodayRail() {
         Today
       </h2>
 
-      {mounted && chaseQueue.length > 0 && (
-        <Button
-          type="button"
-          size="sm"
-          variant="default"
-          className="mt-3 w-full"
-          onClick={() => setChaseOpen(true)}
-        >
-          Chase all overdue ({chaseQueue.length})
-        </Button>
-      )}
 
       <div className="mt-4 flex-1">
         {!mounted ? (

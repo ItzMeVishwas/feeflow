@@ -64,27 +64,50 @@ export function seedDemoData(): void {
 
   // The store generates student ids, so read them back and match by phone number.
   const savedStudents = useStore.getState().students
-  const months = previousMonths(4)
-  const latestMonth = months[months.length - 1]
+  const now = new Date()
+  const currentMonth = formatMonth(now)
+  // 4 past months, then the current month (oldest first).
+  const months = [...previousMonths(4), currentMonth]
+  const latestMonth = currentMonth
+  // The month just before the current one: the most recent month that is fully past.
+  const lastPastMonth = months[months.length - 2]
+  // Last day of the current month, so its due date is never in the past.
+  const lastDayOfCurrentMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+  const currentMonthDueDate = `${currentMonth}-${String(lastDayOfCurrentMonth.getDate()).padStart(2, "0")}`
 
   DEMO_STUDENTS.forEach((demo, index) => {
     const student = savedStudents.find((s) => s.parentPhone === demo.parentPhone)
     if (!student) return
 
     for (const month of months) {
-      const dueDate = `${month}-05`
       const isLate = demo.latePaymentDays > 0
+
+      if (month === latestMonth) {
+        // Current month: everything is unpaid but not yet due.
+        addInvoice({
+          studentId: student.id,
+          amount: demo.monthlyFee,
+          month,
+          dueDate: currentMonthDueDate,
+          status: "unpaid",
+          paidDate: null,
+          remindersSent: 0,
+        })
+        continue
+      }
+
+      const dueDate = `${month}-05`
 
       let status: InvoiceStatus = "paid"
       let paidDate: string | null = null
 
-      if (isLate) {
+      if (month === lastPastMonth && index === 10) {
+        status = "overdue"
+      } else if (month === lastPastMonth && index === 11) {
+        status = "unpaid"
+      } else if (isLate) {
         // Late parents pay a fixed number of days after the due date, in every month.
         paidDate = addDays(dueDate, demo.latePaymentDays)
-      } else if (month === latestMonth && index === 10) {
-        status = "overdue"
-      } else if (month === latestMonth && index === 11) {
-        status = "unpaid"
       } else {
         // On-time parents pay on the due date or up to 2 days early.
         paidDate = addDays(dueDate, -(index % 3))

@@ -5,8 +5,8 @@ import { useMemo, useState, useSyncExternalStore } from "react"
 import { formatDate, formatINR, formatMonth } from "@/lib/format"
 import { useStore } from "@/lib/store"
 import type { Invoice } from "@/lib/store"
+import { deriveStatus, toIsoDate, type DisplayStatus } from "@/lib/invoice-status"
 
-type DisplayStatus = "paid" | "due" | "overdue"
 type Filter = "all" | DisplayStatus
 
 const FILTERS: { value: Filter; label: string }[] = [
@@ -31,21 +31,6 @@ const BADGE_CLASS: Record<DisplayStatus, string> = {
 
 const FOCUS_RING =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2"
-
-// Local calendar date as "YYYY-MM-DD". Not toISOString(), which is UTC and can be a day off.
-function toIsoDate(date: Date): string {
-  const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, "0")
-  const d = String(date.getDate()).padStart(2, "0")
-  return `${y}-${m}-${d}`
-}
-
-// Paid stays paid. Anything else is Overdue once its due date has passed, otherwise Due.
-// A stored "overdue" status is treated the same as "unpaid".
-function deriveStatus(invoice: Invoice, today: string): DisplayStatus {
-  if (invoice.status === "paid") return "paid"
-  return invoice.dueDate < today ? "overdue" : "due"
-}
 
 // Subscribed to nothing; used only to detect the client after hydration.
 const subscribeNoop = () => () => {}

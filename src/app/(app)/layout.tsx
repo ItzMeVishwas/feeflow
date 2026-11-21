@@ -1,4 +1,5 @@
 import { AppMobileNav, AppSidebar } from "@/components/app-sidebar"
+import { CommandPalette } from "@/components/command-palette"
 import { TopBar } from "@/components/top-bar"
 
 // No opaque background here, so the theme background and AppBackground
@@ -16,6 +17,7 @@ export default function AppLayout({
         <main className="flex-1">{children}</main>
       </div>
       <AppMobileNav />
+      <CommandPalette />
     </div>
   )
 }

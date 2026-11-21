@@ -4,6 +4,7 @@ import { useSyncExternalStore } from "react"
 import { Search } from "lucide-react"
 
 import ThemeToggle from "@/components/theme-toggle"
+import { usePaletteStore } from "@/lib/palette-store"
 import { useStore } from "@/lib/store"
 
 // Long weekday and month names, e.g. "Tuesday, 14 January 2025".
@@ -71,6 +72,7 @@ export function TopBar() {
         <button
           type="button"
           aria-label="Search"
+          onClick={() => usePaletteStore.getState().setOpen(true)}
           className="flex min-h-11 items-center gap-2 rounded-xl border border-border px-3 text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
         >
           <Search className="size-4" aria-hidden="true" />

@@ -11,21 +11,20 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
+import { RecordPaymentDialog } from "@/components/record-payment-dialog"
+import { ReminderDialog } from "@/components/reminder-dialog"
+import { parentReliability } from "@/lib/forecast"
 import { formatINR } from "@/lib/format"
 import { useStore } from "@/lib/store"
+
+type StoreState = ReturnType<typeof useStore.getState>
+type Student = StoreState["students"][number]
+type Invoice = StoreState["invoices"][number]
+type InvoiceTarget = { invoice: Invoice; student: Student }
 
 type StudentFormValues = {
   name: string
@@ -58,6 +57,9 @@ const formFields: {
   { key: "monthlyFee", label: "Monthly fee (₹)", type: "number", required: true },
 ]
 
+const amberButtonClass =
+  "bg-[var(--amber)] text-[#1A1206] hover:bg-[var(--amber)]/90 focus-visible:ring-2 focus-visible:ring-[var(--amber)]"
+
 function validateStudentForm(values: StudentFormValues): StudentFormErrors {
   const errors: StudentFormErrors = {}
 
@@ -75,9 +77,35 @@ function validateStudentForm(values: StudentFormValues): StudentFormErrors {
   return errors
 }
 
+// Reliability is the average number of days a parent pays late.
+function reliabilityFor(days: number) {
+  if (days < 4) {
+    return { label: "On time", className: "bg-[var(--mint)]/20 text-foreground" }
+  }
+  if (days < 15) {
+    return { label: "Usually late", className: "bg-[var(--amber)]/20 text-foreground" }
+  }
+  return { label: "Risky", className: "bg-[var(--coral)]/20 text-foreground" }
+}
+
+function initialsOf(name: string) {
+  return name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join("")
+}
+
+// Wraps a CSV field in quotes when needed and doubles any embedded quotes.
+function escapeCsv(value: string | number): string {
+  const text = String(value)
+  return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
+}
+
 // Store hydration is reported through zustand's persist API. Using
 // useSyncExternalStore keeps the server render and the first client render
-// identical (both "not hydrated"), so the table never shows empty-then-real data.
+// identical (both "not hydrated"), so the list never shows empty-then-real data.
 function subscribeToHydration(onChange: () => void) {
   return useStore.persist.onFinishHydration(onChange)
 }
@@ -94,6 +122,7 @@ export default function StudentsPage() {
   const students = useStore((s) => s.students)
   const invoices = useStore((s) => s.invoices)
   const addStudent = useStore((s) => s.addStudent)
+  const upiId = useStore((s) => s.settings.upiId)
   const hydrated = useSyncExternalStore(
     subscribeToHydration,
     getHydrated,
@@ -104,6 +133,8 @@ export default function StudentsPage() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [form, setForm] = useState<StudentFormValues>(emptyForm)
   const [errors, setErrors] = useState<StudentFormErrors>({})
+  const [reminderTarget, setReminderTarget] = useState<InvoiceTarget | null>(null)
+  const [paymentTarget, setPaymentTarget] = useState<InvoiceTarget | null>(null)
 
   // Sum of each student's invoices that are not yet paid.
   const amountOwedByStudent = useMemo(() => {
@@ -114,6 +145,24 @@ export default function StudentsPage() {
     }
     return owed
   }, [invoices])
+
+  // The unpaid invoice with the earliest due date, per student.
+  const oldestUnpaidByStudent = useMemo(() => {
+    const oldest = new Map<string, Invoice>()
+    for (const invoice of invoices) {
+      if (invoice.status === "paid") continue
+      const current = oldest.get(invoice.studentId)
+      if (!current || invoice.dueDate < current.dueDate) {
+        oldest.set(invoice.studentId, invoice)
+      }
+    }
+    return oldest
+  }, [invoices])
+
+  const activeCount = useMemo(
+    () => students.filter((student) => student.active).length,
+    [students],
+  )
 
   const visibleStudents = useMemo(() => {
     const term = query.trim().toLowerCase()
@@ -159,144 +208,263 @@ export default function StudentsPage() {
     resetForm()
   }
 
+  function handleExportCsv() {
+    const header = ["name", "parent", "phone", "batch", "fee", "owed", "reliability"]
+    const rows = visibleStudents.map((student) => {
+      const owed = amountOwedByStudent.get(student.id) ?? 0
+      const reliability = reliabilityFor(parentReliability(student.id, invoices)).label
+      return [
+        student.name,
+        student.parentName,
+        student.parentPhone,
+        student.batch,
+        student.monthlyFee,
+        owed,
+        reliability,
+      ]
+        .map(escapeCsv)
+        .join(",")
+    })
+    const csv = [header.join(","), ...rows].join("\r\n")
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" })
+    const url = URL.createObjectURL(blob)
+    const anchor = document.createElement("a")
+    anchor.href = url
+    anchor.download = "students.csv"
+    document.body.appendChild(anchor)
+    anchor.click()
+    anchor.remove()
+    URL.revokeObjectURL(url)
+  }
+
+  function renderStudentRow(student: Student) {
+    const owed = amountOwedByStudent.get(student.id) ?? 0
+    const oldest = oldestUnpaidByStudent.get(student.id)
+    const days = parentReliability(student.id, invoices)
+    const reliability = reliabilityFor(days)
+
+    return (
+      <li
+        key={student.id}
+        className="glass flex flex-col gap-3 rounded-2xl p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
+      >
+        <div className="flex min-w-0 items-center gap-3">
+          <span
+            aria-hidden="true"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--amber)]/20 text-sm font-semibold text-foreground"
+          >
+            {initialsOf(student.name)}
+          </span>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="truncate font-medium text-foreground">{student.name}</p>
+              {student.batch ? (
+                <span className="rounded-xl border border-[var(--glass-border)] px-2 py-0.5 text-xs text-foreground">
+                  {student.batch}
+                </span>
+              ) : null}
+            </div>
+            <p className="truncate text-sm text-muted-foreground">{student.parentName}</p>
+            <p className="text-sm tabular-nums text-muted-foreground">{student.parentPhone}</p>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-3 sm:justify-end">
+          <div>
+            <p className="text-xs text-muted-foreground">Monthly fee</p>
+            <p className="tabular-nums text-foreground">{formatINR(student.monthlyFee)}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Amount owed</p>
+            <p
+              className={
+                owed > 0
+                  ? "font-medium tabular-nums text-[var(--coral)]"
+                  : "tabular-nums text-foreground"
+              }
+            >
+              {formatINR(owed)}
+            </p>
+          </div>
+          <span
+            title={`Pays on average ${days} days late`}
+            className={`rounded-xl px-2.5 py-1 text-xs font-medium ${reliability.className}`}
+          >
+            {reliability.label}
+          </span>
+          {oldest ? (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setReminderTarget({ invoice: oldest, student })}
+              >
+                Remind
+              </Button>
+              <Button
+                size="sm"
+                className={amberButtonClass}
+                onClick={() => setPaymentTarget({ invoice: oldest, student })}
+              >
+                Record payment
+              </Button>
+            </div>
+          ) : null}
+        </div>
+      </li>
+    )
+  }
+
   function renderBody() {
     if (!hydrated) {
       return (
-        <TableRow>
-          <TableCell colSpan={6} className="py-6 text-center text-muted-foreground">
-            Loading students…
-          </TableCell>
-        </TableRow>
+        <p className="glass rounded-2xl p-6 text-center text-muted-foreground">
+          Loading students…
+        </p>
       )
     }
 
     if (students.length === 0) {
       return (
-        <TableRow>
-          <TableCell colSpan={6} className="py-6 text-center text-muted-foreground">
-            No students yet. Add your first student to get started.
-          </TableCell>
-        </TableRow>
+        <div className="glass flex flex-col items-center gap-2 rounded-2xl p-6 text-center">
+          <p className="font-medium text-foreground">No students yet.</p>
+          <p className="text-sm text-muted-foreground">
+            Add your first student to start tracking fees.
+          </p>
+          <Button
+            size="sm"
+            className={`mt-2 ${amberButtonClass}`}
+            onClick={() => setDialogOpen(true)}
+          >
+            Add student
+          </Button>
+        </div>
       )
     }
 
     if (visibleStudents.length === 0) {
       return (
-        <TableRow>
-          <TableCell colSpan={6} className="py-6 text-center text-muted-foreground">
-            No students match “{query.trim()}”.
-          </TableCell>
-        </TableRow>
+        <p className="glass rounded-2xl p-6 text-center text-muted-foreground">
+          {`No students match "${query.trim()}"`}
+        </p>
       )
     }
 
-    return visibleStudents.map((student) => {
-      const owed = amountOwedByStudent.get(student.id) ?? 0
-      return (
-        <TableRow key={student.id}>
-          <TableCell className="font-medium">{student.name}</TableCell>
-          <TableCell>{student.parentName}</TableCell>
-          <TableCell>{student.parentPhone}</TableCell>
-          <TableCell>{student.batch}</TableCell>
-          <TableCell className="text-right tabular-nums">
-            {formatINR(student.monthlyFee)}
-          </TableCell>
-          <TableCell
-            className={
-              owed > 0
-                ? "text-right tabular-nums text-destructive"
-                : "text-right tabular-nums"
-            }
-          >
-            {formatINR(owed)}
-          </TableCell>
-        </TableRow>
-      )
-    })
+    return (
+      <ul role="list" className="flex flex-col gap-3">
+        {visibleStudents.map(renderStudentRow)}
+      </ul>
+    )
   }
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">
-          Students
-        </h1>
+        <div className="min-w-0">
+          <h1 className="font-display text-2xl font-semibold tracking-tight text-foreground">
+            Students
+          </h1>
+          {hydrated ? (
+            <p className="text-sm text-muted-foreground">{`${activeCount} active`}</p>
+          ) : null}
+        </div>
 
-        <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
-          <DialogTrigger render={<Button />}>Add student</DialogTrigger>
-          <DialogContent>
-            <form onSubmit={handleSubmit} noValidate className="grid gap-4">
-              <DialogHeader>
-                <DialogTitle>Add student</DialogTitle>
-                <DialogDescription>
-                  Enter the student and parent details.
-                </DialogDescription>
-              </DialogHeader>
-
-              {formFields.map((field) => {
-                const inputId = `student-${field.key}`
-                const errorId = `${inputId}-error`
-                const error = errors[field.key]
-                return (
-                  <div key={field.key} className="grid gap-1.5">
-                    <Label htmlFor={inputId}>
-                      {field.label}
-                      {field.required ? null : (
-                        <span className="font-normal text-muted-foreground">(optional)</span>
-                      )}
-                    </Label>
-                    <Input
-                      id={inputId}
-                      type={field.type}
-                      min={field.type === "number" ? 0 : undefined}
-                      step={field.type === "number" ? "any" : undefined}
-                      value={form[field.key]}
-                      onChange={(event) => updateField(field.key, event.target.value)}
-                      aria-invalid={error ? true : undefined}
-                      aria-describedby={error ? errorId : undefined}
-                    />
-                    {error ? (
-                      <p id={errorId} className="text-xs text-destructive">
-                        {error}
-                      </p>
-                    ) : null}
-                  </div>
-                )
-              })}
-
-              <DialogFooter>
-                <DialogClose render={<Button variant="outline" type="button" />}>
-                  Cancel
-                </DialogClose>
-                <Button type="submit">Save student</Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+          <Input
+            type="search"
+            aria-label="Search students"
+            placeholder="Search by name, parent, phone or batch"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            className="w-full rounded-xl sm:w-64"
+          />
+          <Button
+            variant="outline"
+            onClick={handleExportCsv}
+            disabled={!hydrated || visibleStudents.length === 0}
+          >
+            Export CSV
+          </Button>
+          <Button className={amberButtonClass} onClick={() => setDialogOpen(true)}>
+            Add student
+          </Button>
+        </div>
       </div>
 
-      <Input
-        type="search"
-        aria-label="Search students"
-        placeholder="Search by name, parent, phone or batch"
-        value={query}
-        onChange={(event) => setQuery(event.target.value)}
-        className="max-w-sm"
-      />
+      {renderBody()}
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Parent</TableHead>
-            <TableHead>Phone</TableHead>
-            <TableHead>Batch</TableHead>
-            <TableHead className="text-right">Monthly fee</TableHead>
-            <TableHead className="text-right">Amount owed</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>{renderBody()}</TableBody>
-      </Table>
+      <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
+        <DialogContent>
+          <form onSubmit={handleSubmit} noValidate className="grid gap-4">
+            <DialogHeader>
+              <DialogTitle>Add student</DialogTitle>
+              <DialogDescription>
+                Enter the student and parent details.
+              </DialogDescription>
+            </DialogHeader>
+
+            {formFields.map((field) => {
+              const inputId = `student-${field.key}`
+              const errorId = `${inputId}-error`
+              const error = errors[field.key]
+              return (
+                <div key={field.key} className="grid gap-1.5">
+                  <Label htmlFor={inputId}>
+                    {field.label}
+                    {field.required ? null : (
+                      <span className="font-normal text-muted-foreground">(optional)</span>
+                    )}
+                  </Label>
+                  <Input
+                    id={inputId}
+                    type={field.type}
+                    min={field.type === "number" ? 0 : undefined}
+                    step={field.type === "number" ? "any" : undefined}
+                    value={form[field.key]}
+                    onChange={(event) => updateField(field.key, event.target.value)}
+                    aria-invalid={error ? true : undefined}
+                    aria-describedby={error ? errorId : undefined}
+                  />
+                  {error ? (
+                    <p id={errorId} className="text-xs text-destructive">
+                      {error}
+                    </p>
+                  ) : null}
+                </div>
+              )
+            })}
+
+            <DialogFooter>
+              <DialogClose render={<Button variant="outline" type="button" />}>
+                Cancel
+              </DialogClose>
+              <Button type="submit">Save student</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {reminderTarget ? (
+        <ReminderDialog
+          invoice={reminderTarget.invoice}
+          student={reminderTarget.student}
+          upiId={upiId}
+          open
+          onClose={() => setReminderTarget(null)}
+        />
+      ) : null}
+
+      {paymentTarget ? (
+        <RecordPaymentDialog
+          invoice={paymentTarget.invoice}
+          student={paymentTarget.student}
+          open
+          onOpenChange={(open) => {
+            if (!open) setPaymentTarget(null)
+          }}
+        />
+      ) : null}
     </div>
   )
 }

@@ -2,9 +2,13 @@
 
 import { useMemo, useState, useSyncExternalStore } from "react"
 
+import { AnimatedNumber } from "@/components/ui/animated-number"
 import { Button } from "@/components/ui/button"
+import { Progress } from "@/components/ui/progress"
 import { ReminderDialog } from "@/components/reminder-dialog"
-import { formatINR } from "@/lib/format"
+import { RunwayChart } from "@/components/runway-chart"
+import { TodayRail } from "@/components/today-rail"
+import { formatDate, formatINR } from "@/lib/format"
 import { useStore } from "@/lib/store"
 import type { Invoice, Student } from "@/lib/store"
 import { daysLate, deriveStatus, toIsoDate } from "@/lib/invoice-status"
@@ -25,15 +29,17 @@ type OwedRow = {
   days: number
 }
 
-function StatCard({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="glass rounded-2xl p-4">
-      <p className="text-sm text-muted-foreground">{label}</p>
-      <p className="mt-1 text-2xl font-semibold tabular-nums text-foreground">
-        {formatINR(value)}
-      </p>
-    </div>
-  )
+// Whole rupees for dashboard numbers. formatINR keeps paise for the detail tables.
+const wholeINR = new Intl.NumberFormat("en-IN", {
+  style: "currency",
+  currency: "INR",
+  maximumFractionDigits: 0,
+})
+const formatWholeINR = (amount: number): string => wholeINR.format(amount)
+
+// Percentage of total, 0 when total is 0 (avoids divide-by-zero).
+function share(part: number, total: number): number {
+  return total > 0 ? (part / total) * 100 : 0
 }
 
 function OwedTable({
@@ -85,6 +91,44 @@ function OwedTable({
   )
 }
 
+function OwedCards({
+  rows,
+  showRemind,
+  onRemind,
+}: {
+  rows: OwedRow[]
+  showRemind: boolean
+  onRemind: (invoiceId: string) => void
+}) {
+  return (
+    <ul className="space-y-3">
+      {rows.map(({ invoice, studentName, parentName, days }) => (
+        <li key={invoice.id} className="glass rounded-2xl p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="break-words font-medium text-foreground">{studentName}</p>
+              <p className="break-words text-sm text-muted-foreground">{parentName}</p>
+            </div>
+            <p className="shrink-0 tabular-nums text-foreground">{formatINR(invoice.amount)}</p>
+          </div>
+          <div className="mt-3 flex items-center justify-between gap-3">
+            <p className="text-sm tabular-nums text-muted-foreground">
+              {days > 0
+                ? `${days} ${days === 1 ? "day" : "days"} late`
+                : `Due ${formatDate(invoice.dueDate)}`}
+            </p>
+            {showRemind && (
+              <Button type="button" onClick={() => onRemind(invoice.id)}>
+                Remind
+              </Button>
+            )}
+          </div>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
 export default function DashboardPage() {
   // Zustand persist reads localStorage on the client only, so the server HTML
   // would not match the first client render. Wait for mount before showing data.
@@ -111,8 +155,13 @@ export default function DashboardPage() {
     let totalOutstanding = 0
     let overdueAmount = 0
     let collectedThisMonth = 0
+    let expectedThisMonth = 0
     for (const inv of invoices) {
       if (inv.status !== "paid") totalOutstanding += inv.amount
+      // "Expected this month" = unpaid invoices whose due date falls in the current month.
+      if (inv.status !== "paid" && inv.dueDate.startsWith(currentMonth)) {
+        expectedThisMonth += inv.amount
+      }
       if (deriveStatus(inv, today) === "overdue") overdueAmount += inv.amount
       if (
         inv.status === "paid" &&
@@ -122,7 +171,7 @@ export default function DashboardPage() {
         collectedThisMonth += inv.amount
       }
     }
-    return { totalOutstanding, overdueAmount, collectedThisMonth }
+    return { totalOutstanding, overdueAmount, collectedThisMonth, expectedThisMonth }
   }, [invoices, today, currentMonth])
 
   const owedRows = useMemo(() => {
@@ -143,6 +192,28 @@ export default function DashboardPage() {
     })
     return rows
   }, [invoices, studentById, today])
+
+  // Overdue money split into the same day buckets as the tables.
+  const aging = useMemo(() => {
+    const amounts = BUCKETS.map((bucket) =>
+      owedRows
+        .filter((row) => bucket.test(row.days))
+        .reduce((sum, row) => sum + row.invoice.amount, 0),
+    )
+    return { amounts, total: amounts.reduce((sum, amount) => sum + amount, 0) }
+  }, [owedRows])
+
+  // Distinct parents with overdue invoices. Uses phone, falls back to parent name.
+  const overdueParentCount = useMemo(() => {
+    const parents = new Set<string>()
+    for (const row of owedRows) {
+      const student = studentById.get(row.invoice.studentId)
+      const key =
+        (student?.parentPhone ?? "").trim() || (student?.parentName ?? "").trim()
+      if (key) parents.add(key)
+    }
+    return parents.size
+  }, [owedRows, studentById])
 
   const groups = useMemo(
     () =>
@@ -180,14 +251,88 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-        Dashboard
-      </h1>
+      <section aria-label="Overview" className="grid items-stretch gap-4 lg:grid-cols-3">
+        <div className="glass h-full rounded-3xl p-4 sm:p-6 lg:col-span-2">
+          <RunwayChart />
+        </div>
+        <div className="glass h-full rounded-2xl p-4 sm:p-6">
+          <TodayRail />
+        </div>
+      </section>
 
-      <section aria-label="Summary" className="grid gap-4 sm:grid-cols-3">
-        <StatCard label="Total outstanding" value={stats.totalOutstanding} />
-        <StatCard label="Overdue amount" value={stats.overdueAmount} />
-        <StatCard label="Collected this month" value={stats.collectedThisMonth} />
+      <section aria-label="Summary" className="grid gap-4 md:grid-cols-3">
+        <div className="glass rounded-2xl p-4">
+          <p className="text-sm text-muted-foreground">Total outstanding</p>
+          <p className="mt-1 text-2xl font-semibold text-foreground">
+            <AnimatedNumber value={stats.totalOutstanding} format={formatWholeINR} />
+          </p>
+          <p className="mt-4 text-xs text-muted-foreground">Overdue, by days late</p>
+          <div
+            aria-hidden="true"
+            className="mt-2 flex h-2 w-full overflow-hidden rounded-full bg-muted"
+          >
+            <div
+              className="h-full bg-[var(--amber)]/40"
+              style={{ width: `${share(aging.amounts[0], aging.total)}%` }}
+            />
+            <div
+              className="h-full bg-[var(--amber)]"
+              style={{ width: `${share(aging.amounts[1], aging.total)}%` }}
+            />
+            <div
+              className="h-full bg-[var(--overdue)]"
+              style={{ width: `${share(aging.amounts[2], aging.total)}%` }}
+            />
+          </div>
+          <ul className="mt-2 grid grid-cols-3 gap-2 text-xs text-muted-foreground">
+            <li>
+              <span className="block">0 to 15 days</span>
+              <span className="tabular-nums text-foreground">
+                {formatWholeINR(aging.amounts[0])}
+              </span>
+            </li>
+            <li>
+              <span className="block">16 to 30 days</span>
+              <span className="tabular-nums text-foreground">
+                {formatWholeINR(aging.amounts[1])}
+              </span>
+            </li>
+            <li>
+              <span className="block">30+ days</span>
+              <span className="tabular-nums text-foreground">
+                {formatWholeINR(aging.amounts[2])}
+              </span>
+            </li>
+          </ul>
+        </div>
+
+        <div className="glass rounded-2xl p-4">
+          <p className="text-sm text-muted-foreground">Collected this month</p>
+          <p className="mt-1 text-2xl font-semibold text-foreground">
+            <AnimatedNumber value={stats.collectedThisMonth} format={formatWholeINR} />
+          </p>
+          <Progress
+            value={Math.min(100, share(stats.collectedThisMonth, stats.expectedThisMonth))}
+            aria-label="Collected against expected this month"
+            className="mt-4"
+          />
+          <p className="mt-2 text-sm text-muted-foreground">
+            Of {formatWholeINR(stats.expectedThisMonth)} expected
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Expected this month: invoices due this month
+          </p>
+        </div>
+
+        <div className="glass rounded-2xl p-4">
+          <p className="text-sm text-muted-foreground">Overdue amount</p>
+          <p className="mt-1 text-2xl font-semibold text-overdue-text">
+            <AnimatedNumber value={stats.overdueAmount} format={formatWholeINR} />
+          </p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {overdueParentCount} {overdueParentCount === 1 ? "parent" : "parents"}
+          </p>
+        </div>
       </section>
 
       <section className="space-y-4">
@@ -201,7 +346,12 @@ export default function DashboardPage() {
           groups.map((group) => (
             <div key={group.label} className="space-y-2">
               <h3 className="text-sm font-medium text-muted-foreground">{group.label}</h3>
-              <OwedTable rows={group.rows} showRemind onRemind={setRemindInvoiceId} />
+              <div className="hidden md:block">
+                <OwedTable rows={group.rows} showRemind onRemind={setRemindInvoiceId} />
+              </div>
+              <div className="md:hidden">
+                <OwedCards rows={group.rows} showRemind onRemind={setRemindInvoiceId} />
+              </div>
             </div>
           ))
         )}
@@ -209,7 +359,12 @@ export default function DashboardPage() {
         {upcomingRows.length > 0 && (
           <div className="space-y-2">
             <h3 className="text-sm font-medium text-muted-foreground">Upcoming</h3>
-            <OwedTable rows={upcomingRows} showRemind={false} onRemind={setRemindInvoiceId} />
+            <div className="hidden md:block">
+              <OwedTable rows={upcomingRows} showRemind={false} onRemind={setRemindInvoiceId} />
+            </div>
+            <div className="md:hidden">
+              <OwedCards rows={upcomingRows} showRemind={false} onRemind={setRemindInvoiceId} />
+            </div>
           </div>
         )}
 

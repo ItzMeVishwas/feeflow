@@ -9,6 +9,7 @@ export type AnimatedNumberProps = {
   className?: string;
   springOptions?: SpringOptions;
   as?: React.ElementType;
+  format?: (n: number) => string;
 };
 
 export function AnimatedNumber({
@@ -16,12 +17,13 @@ export function AnimatedNumber({
   className,
   springOptions,
   as = 'span',
+  format,
 }: AnimatedNumberProps) {
   const MotionComponent = motion.create(as as keyof React.JSX.IntrinsicElements);
 
   const spring = useSpring(value, springOptions);
   const display = useTransform(spring, (current) =>
-    Math.round(current).toLocaleString()
+    format ? format(Math.round(current)) : Math.round(current).toLocaleString()
   );
 
   useEffect(() => {

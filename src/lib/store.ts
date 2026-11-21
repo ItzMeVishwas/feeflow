@@ -13,6 +13,8 @@ export type Student = {
 
 export type InvoiceStatus = "unpaid" | "paid" | "overdue"
 
+export type Payment = { id: string; amount: number; date: string } // date is ISO "YYYY-MM-DD"
+
 export type Invoice = {
   id: string
   studentId: string
@@ -22,6 +24,7 @@ export type Invoice = {
   status: InvoiceStatus
   paidDate: string | null
   remindersSent: number
+  payments?: Payment[]
 }
 
 export type Bill = {
@@ -54,6 +57,8 @@ export type AppActions = {
   updateInvoice: (id: string, patch: Partial<Omit<Invoice, "id">>) => void
   removeInvoice: (id: string) => void
   incrementRemindersSent: (id: string) => void
+  recordPayment: (invoiceId: string, amount: number, date: string) => void
+  undoPayment: (invoiceId: string, paymentId: string) => void
 
   addBill: (bill: Omit<Bill, "id">) => void
   updateBill: (id: string, patch: Partial<Omit<Bill, "id">>) => void
@@ -110,6 +115,31 @@ export const useStore = create<AppStore>()(
           invoices: state.invoices.map((i) =>
             i.id === id ? { ...i, remindersSent: i.remindersSent + 1 } : i,
           ),
+        })),
+      recordPayment: (invoiceId, amount, date) =>
+        set((state) => {
+          if (amount <= 0) return state
+          return {
+            invoices: state.invoices.map((i): Invoice => {
+              if (i.id !== invoiceId) return i
+              const payments = [...(i.payments ?? []), { id: crypto.randomUUID(), amount, date }]
+              const total = payments.reduce((sum, p) => sum + p.amount, 0)
+              return total >= i.amount
+                ? { ...i, payments, status: "paid", paidDate: date }
+                : { ...i, payments, status: "unpaid", paidDate: null }
+            }),
+          }
+        }),
+      undoPayment: (invoiceId, paymentId) =>
+        set((state) => ({
+          invoices: state.invoices.map((i): Invoice => {
+            if (i.id !== invoiceId) return i
+            const payments = (i.payments ?? []).filter((p) => p.id !== paymentId)
+            const total = payments.reduce((sum, p) => sum + p.amount, 0)
+            return total >= i.amount
+              ? { ...i, payments }
+              : { ...i, payments, status: "unpaid", paidDate: null }
+          }),
         })),
 
       addBill: (bill) =>

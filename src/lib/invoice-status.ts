@@ -24,3 +24,21 @@ export function daysLate(dueDate: string, today: string): number {
   const diff = Math.round((Date.UTC(ty, tm - 1, td) - Date.UTC(y, m - 1, d)) / 86400000)
   return Math.max(0, diff)
 }
+
+// Sum of all recorded payments for an invoice, rounded to 2 decimals.
+export function amountPaid(invoice: Invoice): number {
+  const total = (invoice.payments ?? []).reduce((sum, p) => sum + p.amount, 0)
+  return Math.round(total * 100) / 100
+}
+
+// Outstanding balance. 0 once the invoice is marked paid.
+export function amountDue(invoice: Invoice): number {
+  if (invoice.status === "paid") return 0
+  const due = Math.max(0, invoice.amount - amountPaid(invoice))
+  return Math.round(due * 100) / 100
+}
+
+// True when some money has been paid but a balance still remains.
+export function isPartPaid(invoice: Invoice): boolean {
+  return amountPaid(invoice) > 0 && amountDue(invoice) > 0
+}

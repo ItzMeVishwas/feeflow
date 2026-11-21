@@ -4,9 +4,10 @@ import { useMemo, useState, useSyncExternalStore } from "react"
 
 import { formatDate, formatINR, formatMonth } from "@/lib/format"
 import { ReminderDialog } from "@/components/reminder-dialog"
+import { RecordPaymentDialog } from "@/components/record-payment-dialog"
 import { useStore } from "@/lib/store"
 import type { Invoice } from "@/lib/store"
-import { deriveStatus, toIsoDate, type DisplayStatus } from "@/lib/invoice-status"
+import { deriveStatus, isPartPaid, toIsoDate, type DisplayStatus } from "@/lib/invoice-status"
 
 type Filter = "all" | DisplayStatus
 
@@ -30,6 +31,9 @@ const BADGE_CLASS: Record<DisplayStatus, string> = {
   overdue: "bg-red-100 text-red-800 ring-red-600/20",
 }
 
+// Amber tone for a partly paid invoice. It sits beside the status badge.
+const PART_PAID_CLASS = "bg-amber-100 text-amber-900 ring-amber-600/20"
+
 const FOCUS_RING =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
 
@@ -48,12 +52,13 @@ export default function InvoicesPage() {
   const students = useStore((s) => s.students)
   const invoices = useStore((s) => s.invoices)
   const addInvoice = useStore((s) => s.addInvoice)
-  const updateInvoice = useStore((s) => s.updateInvoice)
   const upiId = useStore((s) => s.settings.upiId)
 
   const [filter, setFilter] = useState<Filter>("all")
   const [message, setMessage] = useState("")
   const [reminderInvoice, setReminderInvoice] = useState<Invoice | null>(null)
+  const [paymentInvoice, setPaymentInvoice] = useState<Invoice | null>(null)
+  const [paymentOpen, setPaymentOpen] = useState(false)
 
   const today = toIsoDate(new Date())
   const currentMonth = today.slice(0, 7) // "YYYY-MM"
@@ -213,6 +218,13 @@ export default function InvoicesPage() {
                     >
                       {STATUS_LABEL[status]}
                     </span>
+                    {status !== "paid" && isPartPaid(invoice) && (
+                      <span
+                        className={`ml-2 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${PART_PAID_CLASS}`}
+                      >
+                        Part paid
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex flex-wrap justify-end gap-2">
@@ -229,13 +241,14 @@ export default function InvoicesPage() {
                       {status !== "paid" && (
                         <button
                           type="button"
-                          aria-label={`Mark ${studentName}'s ${formatMonth(invoice.month)} invoice as paid`}
-                          onClick={() =>
-                            updateInvoice(invoice.id, { status: "paid", paidDate: today })
-                          }
+                          aria-label={`Record payment for ${studentName}'s ${formatMonth(invoice.month)} invoice`}
+                          onClick={() => {
+                            setPaymentInvoice(invoice)
+                            setPaymentOpen(true)
+                          }}
                           className={`rounded-md border border-border bg-card px-3 py-1 text-sm font-medium text-foreground hover:bg-muted ${FOCUS_RING}`}
                         >
-                          Mark as paid
+                          Record payment
                         </button>
                       )}
                     </div>
@@ -256,6 +269,13 @@ export default function InvoicesPage() {
           onClose={() => setReminderInvoice(null)}
         />
       )}
+
+      <RecordPaymentDialog
+        invoice={paymentInvoice}
+        student={students.find((s) => s.id === paymentInvoice?.studentId)}
+        open={paymentOpen}
+        onOpenChange={setPaymentOpen}
+      />
     </div>
   )
 }

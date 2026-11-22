@@ -31,20 +31,23 @@ const questions = [
 export function Faq() {
   return (
     <section id="faq" className="scroll-mt-24 mx-auto max-w-3xl px-5 py-20 sm:px-8">
-      <h2 className="font-heading text-3xl font-semibold tracking-tight sm:text-4xl">Questions tutors ask</h2>
+      <h2 className="font-heading text-3xl font-semibold tracking-tight text-[#0A1F3D] sm:text-4xl">Questions tutors ask</h2>
 
       <div className="mt-10 space-y-3">
         {questions.map(({ question, answer }) => (
-          <details key={question} className="group rounded-xl glass px-5 py-4 open:bg-white/[0.06]">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 rounded-lg font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F2A93B]">
+          <details
+            key={question}
+            className="group rounded-2xl border border-[#E6EBF2] bg-white px-5 py-4 shadow-[0_1px_2px_rgba(10,31,61,0.04)] open:shadow-[0_12px_32px_-20px_rgba(10,31,61,0.25)]"
+          >
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 rounded-lg font-semibold text-[#0A1F3D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0E9F8E]">
               {question}
               <Plus
                 aria-hidden="true"
-                className="h-5 w-5 shrink-0 text-[#F2A93B] transition-transform group-open:rotate-45"
+                className="h-5 w-5 shrink-0 text-[#0B2A55] transition-transform group-open:rotate-45"
               />
             </summary>
             <div className="mt-4 space-y-3">
-              <p className="leading-relaxed text-[#9AA8BC]">{answer}</p>
+              <p className="leading-relaxed text-[#5E6E87]">{answer}</p>
             </div>
           </details>
         ))}

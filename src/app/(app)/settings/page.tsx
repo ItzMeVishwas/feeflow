@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react"
 import { toast } from "sonner"
 
+import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -27,18 +28,23 @@ import {
 
 type ReminderLanguage = Settings["reminderLanguage"]
 
-const saveButtonClass = "bg-[#F2A93B] text-[#1A1206] hover:bg-[#F2A93B]/90"
-const dangerButtonClass = "bg-[#FF6B6B] text-[#1A1206] hover:bg-[#FF6B6B]/90"
-const fieldClass = "h-10 rounded-xl"
+const CARD_CLASS =
+  "rounded-3xl border border-[#E6EBF2] bg-white shadow-[0_1px_2px_rgba(10,31,61,.04),0_4px_16px_rgba(10,31,61,.04)] dark:border-white/10 dark:bg-[#121E36]"
+const saveButtonClass =
+  "h-11 rounded-xl bg-[#0B2A55] px-5 font-semibold text-white hover:bg-[#133A72] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B2A55]"
+const dangerButtonClass =
+  "bg-[#D93F3F] text-white hover:bg-[#C23535] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D93F3F]"
+const fieldClass = "h-11 rounded-xl border-[#DCE3EE]"
 const selectClass =
-  "h-10 w-full rounded-xl border border-input bg-transparent px-2.5 text-base outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm dark:bg-input/30"
+  "h-11 w-full rounded-xl border border-[#DCE3EE] bg-white px-2.5 text-base text-[#0A1F3D] outline-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B2A55] md:text-sm dark:border-white/10 dark:bg-input/30"
 
 export default function SettingsPage() {
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
-      <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground">
-        Settings
-      </h1>
+      <PageHeader
+        title="Settings"
+        description="Update your profile, reminder language and backup data."
+      />
       <ProfileForm />
       <DataSection />
     </div>
@@ -97,7 +103,7 @@ function ProfileForm() {
   }
 
   return (
-    <section aria-labelledby="profile-heading" className="glass rounded-2xl p-6">
+    <section aria-labelledby="profile-heading" className={`${CARD_CLASS} p-6`}>
       <h2 id="profile-heading" className="font-heading text-lg font-semibold text-foreground">
         Profile
       </h2>
@@ -152,7 +158,7 @@ function ProfileForm() {
             className={fieldClass}
           />
           {cashError ? (
-            <p id="starting-cash-error" className="text-sm text-destructive">
+            <p id="starting-cash-error" className="text-sm text-[#D93F3F]">
               {cashError}
             </p>
           ) : (
@@ -197,7 +203,7 @@ function DataSection() {
   const clearAll = useStore((s) => s.clearAll)
 
   return (
-    <section aria-labelledby="data-heading" className="glass rounded-2xl p-5">
+    <section aria-labelledby="data-heading" className={`${CARD_CLASS} p-5`}>
       <h2 id="data-heading" className="font-heading text-lg font-semibold text-foreground">
         Data
       </h2>
@@ -356,7 +362,7 @@ function BackupControls() {
         />
       </div>
       {restoreError ? (
-        <p role="alert" className="text-sm text-destructive">
+        <p role="alert" className="text-sm text-[#D93F3F]">
           {restoreError}
         </p>
       ) : null}

@@ -12,7 +12,7 @@ const sectionLinks = [
 ];
 
 const focusRing =
-  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F2A93B]";
+  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0E9F8E]";
 
 function scrollToSection(event: MouseEvent<HTMLAnchorElement>, hash: string) {
   event.preventDefault();
@@ -28,7 +28,7 @@ export function LandingNav() {
     <header className="sticky top-0 z-50">
       <nav
         aria-label="Main"
-        className="glass mx-auto mt-3 flex max-w-6xl items-center justify-between gap-4 rounded-2xl px-4 py-3 sm:px-6"
+        className="mx-auto mt-3 flex max-w-6xl items-center justify-between gap-4 rounded-2xl border border-[#E6EBF2] bg-white/90 px-4 py-3 shadow-[0_1px_2px_rgba(10,31,61,0.04),0_12px_32px_-16px_rgba(10,31,61,0.18)] backdrop-blur-md sm:px-6"
       >
         <Logo />
 
@@ -38,7 +38,7 @@ export function LandingNav() {
               <a
                 href={link.href}
                 onClick={(event) => scrollToSection(event, link.href)}
-                className={`inline-flex h-11 items-center rounded-xl px-3 text-sm font-medium text-[#9AA8BC] transition-colors hover:bg-white/[0.06] hover:text-[#E8EDF5] ${focusRing}`}
+                className={`inline-flex h-11 items-center rounded-xl px-3 text-sm font-medium text-[#5E6E87] transition-colors hover:bg-[#0B2A55]/5 hover:text-[#0A1F3D] ${focusRing}`}
               >
                 {link.label}
               </a>
@@ -48,7 +48,7 @@ export function LandingNav() {
 
         <Link
           href="/dashboard"
-          className={`inline-flex h-11 items-center rounded-xl bg-[#F2A93B] px-5 font-semibold text-[#1A1206] ${focusRing}`}
+          className={`inline-flex h-11 items-center rounded-xl bg-[#0E9F8E] px-5 text-base font-semibold text-white transition-colors hover:bg-[#0C8A7C] ${focusRing}`}
         >
           Open the app
         </Link>

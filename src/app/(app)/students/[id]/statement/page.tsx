@@ -6,7 +6,8 @@ import { useMemo, useState, useSyncExternalStore } from "react"
 import type { ChangeEvent } from "react"
 import { QRCodeSVG } from "qrcode.react"
 
-import { Button, buttonVariants } from "@/components/ui/button"
+import { PageHeader } from "@/components/page-header"
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { formatDate, formatINR, formatMonth } from "@/lib/format"
@@ -31,8 +32,14 @@ type MonthStatement = {
   presentCount: number
 }
 
-const amberButtonClass =
-  "bg-[var(--amber)] text-[#1A1206] hover:bg-[var(--amber)]/90 focus-visible:ring-2 focus-visible:ring-[var(--amber)]"
+const primaryButtonClass =
+  "h-11 rounded-xl bg-[#0B2A55] px-5 font-semibold text-white hover:bg-[#133A72] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B2A55]"
+
+const secondaryButtonClass =
+  "inline-flex h-11 items-center justify-center rounded-xl border border-[#DCE3EE] bg-white px-5 text-sm font-medium text-[#0B2A55] hover:bg-[#F6F8FB] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B2A55]"
+
+const cardClass =
+  "rounded-3xl border border-[#E6EBF2] bg-white shadow-[0_1px_2px_rgba(10,31,61,.04),0_4px_16px_rgba(10,31,61,.04)] dark:border-white/10 dark:bg-[#121E36]"
 
 // Store hydration is reported through zustand's persist API. Using
 // useSyncExternalStore keeps the server render and the first client render
@@ -160,7 +167,7 @@ export default function StatementPage() {
   function renderBody() {
     if (!hydrated) {
       return (
-        <p className="glass rounded-2xl p-6 text-center text-muted-foreground">
+        <p className={`${cardClass} p-6 text-center text-[#5E6E87]`}>
           Loading statement…
         </p>
       )
@@ -168,15 +175,12 @@ export default function StatementPage() {
 
     if (!student || !statement) {
       return (
-        <div className="glass flex flex-col items-center gap-2 rounded-2xl p-6 text-center">
-          <p className="font-medium text-foreground">We could not find that student.</p>
-          <p className="text-sm text-muted-foreground">
+        <div className={`${cardClass} flex flex-col items-center gap-2 p-6 text-center`}>
+          <p className="font-medium text-[#0A1F3D]">We could not find that student.</p>
+          <p className="text-sm text-[#5E6E87]">
             They may have been removed. Check the students list.
           </p>
-          <Link
-            href="/students"
-            className={`${buttonVariants({ variant: "outline", size: "sm" })} mt-2`}
-          >
+          <Link href="/students" className={`${secondaryButtonClass} mt-2`}>
             Back to students
           </Link>
         </div>
@@ -188,19 +192,19 @@ export default function StatementPage() {
 
     return (
       <>
-        <div className="no-print flex flex-wrap items-start justify-between gap-3">
-          <div className="min-w-0">
-            <h1 className="font-display text-2xl font-semibold tracking-tight text-foreground">
-              Monthly statement
-            </h1>
-            <p className="text-sm text-muted-foreground">{student.name}</p>
-          </div>
-          <Link href="/students" className={buttonVariants({ variant: "outline", size: "sm" })}>
-            Back to students
-          </Link>
+        <div className="no-print">
+          <PageHeader
+            title="Monthly statement"
+            description={`Fees, payments and attendance for ${student.name}.`}
+            action={
+              <Link href="/students" className={secondaryButtonClass}>
+                Back to students
+              </Link>
+            }
+          />
         </div>
 
-        <div className="no-print glass flex flex-col gap-4 rounded-2xl p-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className={`no-print ${cardClass} flex flex-col gap-4 p-5 sm:flex-row sm:items-end sm:justify-between`}>
           <div className="grid gap-1.5">
             <Label htmlFor="statement-month">Month</Label>
             <Input
@@ -212,10 +216,10 @@ export default function StatementPage() {
             />
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button className={amberButtonClass} onClick={() => window.print()}>
+            <Button className={primaryButtonClass} onClick={() => window.print()}>
               Download PDF
             </Button>
-            <Button variant="outline" onClick={handleShareWhatsApp}>
+            <Button variant="outline" onClick={handleShareWhatsApp} className={secondaryButtonClass}>
               Share on WhatsApp
             </Button>
           </div>
@@ -223,9 +227,9 @@ export default function StatementPage() {
 
         <article
           aria-labelledby="statement-title"
-          className="print-sheet glass mx-auto flex w-full max-w-[210mm] flex-col gap-6 rounded-2xl p-5 sm:p-10"
+          className={`print-sheet ${cardClass} mx-auto flex w-full max-w-[210mm] flex-col gap-6 p-5 sm:p-10`}
         >
-          <header className="flex flex-col gap-1 border-b border-[var(--glass-border)] pb-4 sm:flex-row sm:items-end sm:justify-between">
+          <header className="flex flex-col gap-1 border-b border-[#E6EBF2] pb-4 sm:flex-row sm:items-end sm:justify-between">
             <div className="min-w-0">
               {tutorName.trim() ? (
                 <p className="font-display text-xl font-semibold text-foreground">{tutorName}</p>
@@ -264,8 +268,8 @@ export default function StatementPage() {
 
           <section
             aria-label="Amount due"
-            className={`print-hero flex flex-col gap-4 rounded-3xl border border-[var(--glass-border)] p-5 sm:flex-row sm:items-center sm:justify-between ${
-              hasBalance ? "bg-[var(--amber)]/15" : "bg-[var(--mint)]/15"
+            className={`print-hero flex flex-col gap-4 rounded-3xl border border-[#E6EBF2] p-5 sm:flex-row sm:items-center sm:justify-between ${
+              hasBalance ? "bg-[#D98E04]/10" : "bg-[#12A150]/10"
             }`}
           >
             <div className="min-w-0">
@@ -322,7 +326,7 @@ export default function StatementPage() {
             {statement.payments.length === 0 ? (
               <p className="text-sm text-muted-foreground">No payments received this month.</p>
             ) : (
-              <ul role="list" className="flex flex-col divide-y divide-[var(--glass-border)]">
+              <ul role="list" className="flex flex-col divide-y divide-[#E6EBF2]">
                 {statement.payments.map((payment) => (
                   <li
                     key={payment.id}
@@ -357,7 +361,7 @@ export default function StatementPage() {
                           aria-label={label}
                           title={label}
                           className={`block h-3 w-3 rounded-full ${
-                            record.present ? "bg-[var(--mint)]" : "bg-[var(--coral)]"
+                            record.present ? "bg-[#12A150]" : "bg-[#D93F3F]"
                           }`}
                         />
                       </li>

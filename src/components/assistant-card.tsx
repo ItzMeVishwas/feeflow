@@ -89,7 +89,7 @@ export function AssistantCard() {
 
           <Button
             type="button"
-            className="mt-5 h-11 w-full rounded-xl bg-[#1E3A6E] font-semibold text-white hover:bg-[#1E3A6E]/90"
+            className="mt-5 h-11 w-full rounded-xl bg-[#0B2A55] font-semibold text-white hover:bg-[#133A72]"
             onClick={() => setReminderOpen(true)}
           >
             Send reminder

@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { SuccessBurst } from "@/components/ui/success-burst"
 import { formatINR, formatMonth } from "@/lib/format"
 import { amountDue, toIsoDate } from "@/lib/invoice-status"
 import { useStore } from "@/lib/store"
@@ -140,6 +141,9 @@ function RecordPaymentBody({ invoice, student, tutorName, onDone }: RecordPaymen
   if (recorded) {
     return (
       <>
+        <div className="relative mb-2 h-12 w-12">
+          <SuccessBurst show />
+        </div>
         <DialogHeader>
           <DialogTitle>Payment recorded</DialogTitle>
           <DialogDescription>

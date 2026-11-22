@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react"
 
+import { StatusPill, type PillTone } from "@/components/status-pill"
 import { Input } from "@/components/ui/input"
 import { assessPurchase, type Verdict } from "@/lib/afford"
 import { toIsoDate } from "@/lib/invoice-status"
@@ -13,10 +14,10 @@ const VERDICT_WORD: Record<Verdict, string> = {
   danger: "Danger",
 }
 
-const VERDICT_COLOR: Record<Verdict, string> = {
-  safe: "text-[#3DD9A8]",
-  tight: "text-[#F2A93B]",
-  danger: "text-[#FF6B6B]",
+const VERDICT_TONE: Record<Verdict, PillTone> = {
+  safe: "paid",
+  tight: "due",
+  danger: "overdue",
 }
 
 const INVALID_MESSAGE = "Enter an amount in rupees, like 40000."
@@ -42,7 +43,10 @@ export function AffordBox({ state }: { state: AppState }) {
   const showInvalid = !isEmpty && assessment === null
 
   return (
-    <section aria-labelledby="afford-heading" className="glass space-y-4 rounded-2xl p-5">
+    <section
+      aria-labelledby="afford-heading"
+      className="space-y-4 rounded-3xl border border-[#E6EBF2] bg-white p-5 shadow-[0_1px_2px_rgba(10,31,61,.04),0_4px_16px_rgba(10,31,61,.04)] dark:border-white/10 dark:bg-[#121E36]"
+    >
       <h2 id="afford-heading" className="font-heading text-base font-semibold text-foreground">
         Can I afford this?
       </h2>
@@ -58,6 +62,7 @@ export function AffordBox({ state }: { state: AppState }) {
             placeholder="New laptop"
             value={label}
             onChange={(e) => setLabel(e.target.value)}
+            className="h-11 rounded-xl border-[#DCE3EE]"
           />
         </div>
         <div className="space-y-1">
@@ -73,21 +78,24 @@ export function AffordBox({ state }: { state: AppState }) {
             onChange={(e) => setAmountText(e.target.value)}
             aria-describedby={showInvalid ? "afford-amount-error" : undefined}
             aria-invalid={showInvalid || undefined}
+            className="h-11 rounded-xl border-[#DCE3EE]"
           />
         </div>
       </div>
 
       {showInvalid && (
-        <p id="afford-amount-error" className="text-sm text-[#FF6B6B]">
+        <p id="afford-amount-error" className="text-sm text-[#D93F3F]">
           {INVALID_MESSAGE}
         </p>
       )}
 
       {assessment && (
         <div role="status" aria-live="polite" className="space-y-1">
-          <p className={`text-base font-semibold ${VERDICT_COLOR[assessment.verdict]}`}>
-            <strong>{VERDICT_WORD[assessment.verdict]}</strong>
-          </p>
+          <div>
+            <StatusPill tone={VERDICT_TONE[assessment.verdict]}>
+              {VERDICT_WORD[assessment.verdict]}
+            </StatusPill>
+          </div>
           <p className="text-sm tabular-nums text-foreground">{assessment.reason}</p>
         </div>
       )}

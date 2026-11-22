@@ -99,20 +99,26 @@ export function TodayRail() {
             </p>
           </div>
         ) : (
-          <ul className="space-y-3">
-            {actions.map((action) => {
+          <ul className="divide-y divide-[#E6EBF2]">
+            {actions.map((action, index) => {
               const invoice =
                 action.kind === "chase" && action.invoiceId
                   ? invoiceById.get(action.invoiceId)
                   : undefined
 
-              if (invoice) {
-                return (
-                  <motion.li
-                    key={action.id}
-                    whileHover={reduceMotion ? undefined : { y: -2 }}
-                    transition={{ duration: 0.15 }}
-                    className="flex items-center justify-between gap-3 rounded-2xl border border-border/60 p-4"
+              // Rows fade in once on mount. The initial/animate pair is only read on mount,
+              // so later re-renders do not replay the animation.
+              return (
+                <li key={action.id} className="rounded-xl transition-colors hover:bg-[#F6F8FB]">
+                  <motion.div
+                    initial={{ opacity: 0, y: reduceMotion ? 0 : 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      duration: reduceMotion ? 0 : 0.2,
+                      ease: "easeOut",
+                      delay: reduceMotion ? 0 : index * 0.04,
+                    }}
+                    className="flex items-center justify-between gap-3 px-2 py-3"
                   >
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium text-foreground">
@@ -122,26 +128,17 @@ export function TodayRail() {
                         {action.detail}
                       </p>
                     </div>
-                    <Button
-                      type="button"
-                      size="sm"
-                      className="focus-visible:ring-2 focus-visible:ring-amber"
-                      onClick={() => setSelectedInvoiceId(invoice.id)}
-                    >
-                      Remind
-                    </Button>
-                  </motion.li>
-                )
-              }
-
-              return (
-                <li key={action.id} className="rounded-2xl border border-border/60 p-4">
-                  <p className="truncate text-sm font-medium text-foreground">
-                    {action.title}
-                  </p>
-                  <p className="text-sm tabular-nums text-muted-foreground">
-                    {action.detail}
-                  </p>
+                    {invoice && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        className="focus-visible:ring-2 focus-visible:ring-amber"
+                        onClick={() => setSelectedInvoiceId(invoice.id)}
+                      >
+                        Remind
+                      </Button>
+                    )}
+                  </motion.div>
                 </li>
               )
             })}

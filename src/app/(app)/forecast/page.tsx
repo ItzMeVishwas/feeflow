@@ -5,6 +5,8 @@ import { useMemo, useState, useSyncExternalStore } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { AffordBox } from "@/components/afford-box"
+import { PageHeader } from "@/components/page-header"
+import { type PillTone, StatusPill } from "@/components/status-pill"
 import { RunwayChart } from "@/components/runway-chart"
 import {
   buildForecast,
@@ -30,7 +32,10 @@ const BASIS_OPTIONS: { value: ForecastMode; label: string }[] = [
 ]
 
 const fieldClass =
-  "h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 text-base text-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50 dark:bg-input/30 md:text-sm [&>option]:bg-background [&>option]:text-foreground"
+  "h-11 w-full min-w-0 rounded-xl border border-[#DCE3EE] bg-white px-3 text-base text-[#0A1F3D] outline-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B2A55] disabled:opacity-50 md:text-sm dark:border-white/10 dark:bg-[#121E36] dark:text-[#E6ECF5] [&>option]:bg-white [&>option]:text-[#0A1F3D] dark:[&>option]:bg-[#121E36] dark:[&>option]:text-[#E6ECF5]"
+
+const cardClass =
+  "rounded-3xl border border-[#E6EBF2] bg-white shadow-[0_1px_2px_rgba(10,31,61,.04),0_4px_16px_rgba(10,31,61,.04)] dark:border-white/10 dark:bg-[#121E36]"
 
 // Whole rupees for sentences and figures, e.g. "₹28,801".
 const whole = (amount: number): string => formatINR(amount, { wholeRupees: true })
@@ -39,11 +44,11 @@ function daysText(days: number): string {
   return `${days} ${days === 1 ? "day" : "days"}`
 }
 
-// Bands: 0-3 days on time (mint), 4-14 usually late (amber), 15+ risky (coral).
-function reliabilityBand(days: number): { label: string; className: string } {
-  if (days <= 3) return { label: "On time", className: "bg-mint" }
-  if (days <= 14) return { label: "Usually late", className: "bg-amber" }
-  return { label: "Risky", className: "bg-coral" }
+// Bands: 0-3 days on time (paid tone), 4-14 usually late (due tone), 15+ risky (overdue tone).
+function reliabilityBand(days: number): { label: string; tone: PillTone } {
+  if (days <= 3) return { label: "On time", tone: "paid" }
+  if (days <= 14) return { label: "Usually late", tone: "due" }
+  return { label: "Risky", tone: "overdue" }
 }
 
 // One plain-English sentence comparing the lowest balance with and without the changes.
@@ -193,19 +198,27 @@ export default function ForecastPage() {
 
   return (
     <div className="space-y-8">
-      <header>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Forecast</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          See when cash runs short, and test what a late payment or a student leaving would do.
+      <PageHeader
+        title="Forecast"
+        description="See when cash runs short, and test what a late payment or a student leaving would do."
+      />
+
+      <section
+        aria-label="Lowest balance summary"
+        className="rounded-3xl bg-[#0B2A55] p-6 text-white shadow-[0_1px_2px_rgba(10,31,61,.04),0_4px_16px_rgba(10,31,61,.04)] sm:p-8"
+      >
+        <p className="text-4xl font-extrabold tabular-nums sm:text-5xl">
+          {baselineSummary.lowestBalance ? whole(baselineSummary.lowestBalance.balance) : "—"}
         </p>
-      </header>
+        <p className="mt-2 max-w-xl text-sm text-white/80">{sentence}</p>
+      </section>
 
       <AffordBox state={state} />
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
         <div className="min-w-0 space-y-3">
           <div className="space-y-2">
-            <p className="text-sm text-[#9AA8BC]">Forecast basis</p>
+            <p className="text-sm text-[#5E6E87] dark:text-[#93A3BC]">Forecast basis</p>
             <div role="group" aria-label="Forecast basis" className="flex flex-wrap gap-2">
               {BASIS_OPTIONS.map((option) => {
                 const pressed = basis === option.value
@@ -215,10 +228,10 @@ export default function ForecastPage() {
                     type="button"
                     aria-pressed={pressed}
                     onClick={() => setBasis(option.value)}
-                    className={`h-10 rounded-xl px-4 text-sm font-medium text-foreground transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F2A93B] ${
+                    className={`h-11 rounded-xl px-5 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B2A55] ${
                       pressed
-                        ? "bg-[#F2A93B] text-[#1A1206]"
-                        : "border border-white/15 bg-white/[0.04] hover:bg-white/[0.08]"
+                        ? "bg-[#0B2A55] text-white hover:bg-[#133A72]"
+                        : "border border-[#DCE3EE] bg-white text-[#0B2A55] hover:bg-[#F6F8FB] dark:border-white/10 dark:bg-[#121E36] dark:text-[#E6ECF5]"
                     }`}
                   >
                     {option.label}
@@ -233,12 +246,11 @@ export default function ForecastPage() {
             onHorizonChange={setHorizon}
             showBaseline
           />
-          <p className="px-1 text-sm tabular-nums text-foreground">{sentence}</p>
         </div>
 
         <section
           aria-labelledby="what-if-heading"
-          className="glass space-y-6 rounded-2xl p-5 lg:sticky lg:top-6"
+          className={`${cardClass} space-y-6 p-5 lg:sticky lg:top-6`}
         >
           <div className="flex items-center justify-between gap-3">
             <h2 id="what-if-heading" className="text-lg font-semibold text-foreground">
@@ -285,7 +297,7 @@ export default function ForecastPage() {
               value={delayDays}
               disabled={!delayStudentId}
               onChange={(e) => setDelayDays(Number(e.target.value))}
-              className="w-full accent-amber disabled:opacity-50"
+              className="w-full accent-[#0B2A55] disabled:opacity-50"
             />
           </div>
 
@@ -375,7 +387,7 @@ export default function ForecastPage() {
                 return (
                   <li
                     key={student.id}
-                    className="glass flex items-center justify-between gap-3 rounded-2xl px-4 py-3"
+                    className={`${cardClass} flex items-center justify-between gap-3 px-4 py-3`}
                   >
                     <div className="min-w-0">
                       <p className="break-words font-medium text-foreground">{student.name}</p>
@@ -383,13 +395,7 @@ export default function ForecastPage() {
                         {hasHistory ? `Averages ${daysText(days)} late` : "No paid invoices yet"}
                       </p>
                     </div>
-                    {hasHistory && (
-                      <span
-                        className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold text-slate-900 ${band.className}`}
-                      >
-                        {band.label}
-                      </span>
-                    )}
+                    {hasHistory && <StatusPill tone={band.tone}>{band.label}</StatusPill>}
                   </li>
                 )
               })}

@@ -9,6 +9,7 @@ import {
   type KeyboardEvent,
   type PointerEvent as ReactPointerEvent,
 } from "react"
+import { motion, useReducedMotion } from "motion/react"
 import { formatINR } from "@/lib/format"
 
 export type WaveSeries = {
@@ -90,6 +91,7 @@ export function WaveChart({ series, labels, height, zeroLine = false, marker }: 
   const wrapRef = useRef<HTMLDivElement>(null)
   const [width, setWidth] = useState(0)
   const [active, setActive] = useState<number | null>(null)
+  const reduce = useReducedMotion()
 
   useEffect(() => {
     const el = wrapRef.current
@@ -158,29 +160,15 @@ export function WaveChart({ series, labels, height, zeroLine = false, marker }: 
   return (
     <div ref={wrapRef} className="relative w-full" style={{ height }}>
       <style>{`
-        @keyframes wave-chart-draw {
-          from { stroke-dashoffset: 1; }
-          to { stroke-dashoffset: 0; }
-        }
         @keyframes wave-chart-shimmer {
           from { stroke-dashoffset: 0.12; }
           to { stroke-dashoffset: -1; }
-        }
-        .wave-chart-draw {
-          stroke-dasharray: 1;
-          stroke-dashoffset: 1;
-          animation: wave-chart-draw 1.2s ease-out forwards;
         }
         .wave-chart-shimmer {
           stroke-dasharray: 0.12 1;
           animation: wave-chart-shimmer 4s linear infinite;
         }
         @media (prefers-reduced-motion: reduce) {
-          .wave-chart-draw {
-            stroke-dasharray: none;
-            stroke-dashoffset: 0;
-            animation: none;
-          }
           .wave-chart-shimmer {
             display: none;
           }
@@ -280,7 +268,13 @@ export function WaveChart({ series, labels, height, zeroLine = false, marker }: 
               return (
                 <g key={s.key}>
                   {/* Area fill */}
-                  <path d={area} fill={`url(#${uid}-fill-${i})`} />
+                  <motion.path
+                    d={area}
+                    fill={`url(#${uid}-fill-${i})`}
+                    initial={reduce ? false : { opacity: 0 }}
+                    animate={reduce ? undefined : { opacity: 1 }}
+                    transition={{ duration: 0.6, delay: 0.6 }}
+                  />
 
                   {/* Echo: thin faint copy offset downward */}
                   <path
@@ -293,10 +287,11 @@ export function WaveChart({ series, labels, height, zeroLine = false, marker }: 
                   />
 
                   {/* Glow: blurred copy of the main stroke */}
-                  <path
+                  <motion.path
                     d={d}
-                    pathLength={1}
-                    className="wave-chart-draw"
+                    initial={reduce ? false : { pathLength: 0 }}
+                    animate={reduce ? undefined : { pathLength: 1 }}
+                    transition={{ duration: 1.2, ease: "easeOut" }}
                     fill="none"
                     stroke={s.color}
                     strokeWidth={4}
@@ -305,10 +300,11 @@ export function WaveChart({ series, labels, height, zeroLine = false, marker }: 
                   />
 
                   {/* Crisp main stroke */}
-                  <path
+                  <motion.path
                     d={d}
-                    pathLength={1}
-                    className="wave-chart-draw"
+                    initial={reduce ? false : { pathLength: 0 }}
+                    animate={reduce ? undefined : { pathLength: 1 }}
+                    transition={{ duration: 1.2, ease: "easeOut" }}
                     fill="none"
                     stroke={s.color}
                     strokeWidth={2}

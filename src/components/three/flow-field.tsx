@@ -61,12 +61,11 @@ const FRAGMENT_SHADER = /* glsl */ `
     float d = length(gl_PointCoord - 0.5);
     float a = 1.0 - smoothstep(0.0, 0.5, d);
 
-    vec3 plum = vec3(0.545, 0.361, 0.965);
-    vec3 amber = vec3(0.949, 0.663, 0.231);
-    vec3 mint = vec3(0.239, 0.851, 0.659);
+    vec3 navy = vec3(0.043, 0.165, 0.333);
+    vec3 teal = vec3(0.055, 0.624, 0.557);
 
-    vec3 col = mix(plum, amber, vH);
-    col = mix(col, mint, uLight * 0.5);
+    vec3 col = mix(navy, teal, vH);
+    col = mix(col, teal, uLight * 0.5);
 
     float alpha = mix(0.35, 0.85, vH) * mix(1.0, 0.7, uLight) * (0.7 + 0.3 * vSeed);
     gl_FragColor = vec4(col, a * alpha);
@@ -251,7 +250,7 @@ export default function FlowField() {
           className="absolute inset-0 h-full w-full"
           style={{
             background:
-              "radial-gradient(60% 50% at 30% 60%, rgba(242,169,59,0.22), transparent 70%), radial-gradient(50% 50% at 75% 40%, rgba(42,31,61,0.5), transparent 70%)",
+              "radial-gradient(60% 50% at 30% 60%, rgba(14,159,142,0.22), transparent 70%), radial-gradient(50% 50% at 75% 40%, rgba(11,42,85,0.5), transparent 70%)",
           }}
         />
       ) : null}

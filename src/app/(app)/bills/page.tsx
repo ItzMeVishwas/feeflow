@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
+import { PageHeader } from "@/components/page-header"
+import { StatusPill } from "@/components/status-pill"
 import {
   Dialog,
   DialogContent,
@@ -256,16 +258,16 @@ function BillForm({ bill, onClose }: BillFormProps) {
       </div>
 
       {error && (
-        <p role="alert" className="text-sm text-overdue-text">
+        <p role="alert" className="text-sm text-[#D93F3F]">
           {error}
         </p>
       )}
 
       <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-        <Button type="button" variant="outline" size="lg" onClick={onClose}>
+        <Button type="button" variant="outline" size="lg" onClick={onClose} className={SECONDARY_BUTTON}>
           Cancel
         </Button>
-        <Button type="submit" size="lg">
+        <Button type="submit" size="lg" className={PRIMARY_BUTTON}>
           {bill ? "Save changes" : "Add bill"}
         </Button>
       </div>
@@ -288,6 +290,7 @@ function RowActions({ name, onEdit, onDelete }: RowActionsProps) {
         variant="outline"
         size="sm"
         onClick={onEdit}
+        className={SECONDARY_BUTTON}
         aria-label={`Edit ${name}`}
       >
         Edit
@@ -297,7 +300,7 @@ function RowActions({ name, onEdit, onDelete }: RowActionsProps) {
         size="sm"
         onClick={onDelete}
         aria-label={`Delete ${name}`}
-        className="text-overdue-text"
+        className="text-[#D93F3F] hover:bg-[#D93F3F]/10"
       >
         Delete
       </Button>
@@ -306,7 +309,16 @@ function RowActions({ name, onEdit, onDelete }: RowActionsProps) {
 }
 
 const ROW_CLASS =
-  "flex flex-col gap-3 rounded-xl border border-border bg-foreground/[0.03] px-4 py-3 transition-colors hover:bg-foreground/[0.07] sm:flex-row sm:items-center sm:justify-between"
+  "flex flex-col gap-3 px-4 py-3 transition-colors hover:bg-[#F6F8FB] sm:flex-row sm:items-center sm:justify-between"
+
+const CARD =
+  "rounded-3xl border border-[#E6EBF2] bg-white p-5 shadow-[0_1px_2px_rgba(10,31,61,.04),0_4px_16px_rgba(10,31,61,.04)] dark:border-white/10 dark:bg-[#121E36] sm:p-6"
+
+const PRIMARY_BUTTON =
+  "h-11 rounded-xl bg-[#0B2A55] px-5 font-semibold text-white hover:bg-[#133A72] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B2A55]"
+
+const SECONDARY_BUTTON =
+  "h-11 rounded-xl border border-[#DCE3EE] bg-white text-[#0B2A55] hover:bg-[#F6F8FB] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B2A55]"
 
 // ---------- Page ----------
 
@@ -375,25 +387,23 @@ export default function BillsPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 p-4 sm:p-6">
-      <header>
-        <h1 className="font-display text-2xl font-semibold text-foreground">Bills</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Rent, internet and other payments that shape your cash forecast.
-        </p>
-      </header>
+      <PageHeader
+        title="Bills"
+        description="Rent, internet and other payments that shape your cash forecast."
+      />
 
       {/* Supporting summary */}
       <section aria-label="Summary" className="grid gap-3 sm:grid-cols-2">
-        <div className="glass rounded-2xl p-4">
-          <p className="text-sm text-muted-foreground">Monthly fixed costs</p>
+        <div className={CARD}>
+          <p className="text-sm text-[#5E6E87]">Monthly fixed costs</p>
           <p className="font-display mt-1 text-2xl font-semibold tabular-nums text-foreground">
             {formatINR(monthlyFixed, { wholeRupees: true })}
           </p>
         </div>
-        <div className="glass rounded-2xl p-4">
-          <p className="text-sm text-muted-foreground">Runway</p>
+        <div className={CARD}>
+          <p className="text-sm text-[#5E6E87]">Runway</p>
           {runwayDays !== null ? (
-            <p className="font-display mt-1 text-2xl font-semibold tabular-nums text-paid-text">
+            <p className="font-display mt-1 text-2xl font-semibold tabular-nums text-[#12A150]">
               {runwayDays} {runwayDays === 1 ? "day" : "days"}
             </p>
           ) : (
@@ -403,18 +413,18 @@ export default function BillsPage() {
       </section>
 
       {bills.length === 0 ? (
-        <section className="glass-strong flex flex-col items-start gap-4 rounded-3xl p-6 sm:p-8">
-          <p className="text-base text-foreground">
+        <section className={`${CARD} flex flex-col items-start gap-4`}>
+          <p className="text-base text-[#0A1F3D]">
             No bills yet. Add rent, internet or salaries so your forecast is accurate.
           </p>
-          <Button size="lg" onClick={openAdd}>
+          <Button size="lg" onClick={openAdd} className={PRIMARY_BUTTON}>
             Add bill
           </Button>
         </section>
       ) : (
         <section
           aria-labelledby="upcoming-heading"
-          className="glass-strong rounded-3xl p-5 sm:p-6"
+          className={CARD}
         >
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -430,7 +440,7 @@ export default function BillsPage() {
                   : `${occurrences.length} ${occurrences.length === 1 ? "payment" : "payments"} due in the next 60 days.`}
               </p>
             </div>
-            <Button size="lg" onClick={openAdd}>
+            <Button size="lg" onClick={openAdd} className={PRIMARY_BUTTON}>
               Add bill
             </Button>
           </div>
@@ -438,17 +448,13 @@ export default function BillsPage() {
           {weeks.map((group) => (
             <div key={group.label} className="mt-6">
               <h3 className="text-sm font-medium text-muted-foreground">{group.label}</h3>
-              <ul className="mt-2 flex flex-col gap-2">
+              <ul className="mt-2 divide-y divide-[#E6EBF2]">
                 {group.rows.map((occ) => (
                   <motion.li key={occ.key} {...motionProps} className={ROW_CLASS}>
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="truncate font-medium text-foreground">{occ.name}</p>
-                        {occ.recurring && (
-                          <span className="rounded-xl bg-paid/15 px-2 py-0.5 text-xs font-medium text-paid-text">
-                            Monthly
-                          </span>
-                        )}
+                        <p className="truncate font-medium text-[#0A1F3D]">{occ.name}</p>
+                        {occ.recurring && <StatusPill tone="neutral">Monthly</StatusPill>}
                       </div>
                       <p className="text-sm text-muted-foreground">{formatDate(occ.date)}</p>
                     </div>
@@ -471,7 +477,7 @@ export default function BillsPage() {
       )}
 
       {bills.length > 0 && (
-        <section aria-labelledby="all-bills-heading" className="glass rounded-2xl p-5">
+        <section aria-labelledby="all-bills-heading" className={CARD}>
           <h2
             id="all-bills-heading"
             className="font-display text-lg font-semibold text-foreground"
@@ -481,17 +487,13 @@ export default function BillsPage() {
           <p className="text-sm text-muted-foreground">
             Every stored bill, including one-off bills outside the 60-day window.
           </p>
-          <ul className="mt-4 flex flex-col gap-2">
+          <ul className="mt-4 divide-y divide-[#E6EBF2]">
             {allBills.map((bill) => (
               <motion.li key={bill.id} {...motionProps} className={ROW_CLASS}>
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="truncate font-medium text-foreground">{bill.name}</p>
-                    {bill.recurringMonthly && (
-                      <span className="rounded-xl bg-paid/15 px-2 py-0.5 text-xs font-medium text-paid-text">
-                        Monthly
-                      </span>
-                    )}
+                    <p className="truncate font-medium text-[#0A1F3D]">{bill.name}</p>
+                    {bill.recurringMonthly && <StatusPill tone="neutral">Monthly</StatusPill>}
                   </div>
                   <p className="text-sm text-muted-foreground">
                     {bill.recurringMonthly ? "First due " : "Due "}
@@ -521,7 +523,7 @@ export default function BillsPage() {
           if (!open) setFormState(null)
         }}
       >
-        <DialogContent className="rounded-2xl border-border bg-background/95 backdrop-blur-xl sm:max-w-md">
+        <DialogContent className="rounded-3xl border-[#E6EBF2] bg-white sm:max-w-md dark:bg-[#121E36]">
           <BillForm bill={formState?.bill ?? null} onClose={() => setFormState(null)} />
         </DialogContent>
       </Dialog>
@@ -533,7 +535,7 @@ export default function BillsPage() {
           if (!open) setPendingDelete(null)
         }}
       >
-        <DialogContent className="rounded-2xl border-border bg-background/95 backdrop-blur-xl sm:max-w-md">
+        <DialogContent className="rounded-3xl border-[#E6EBF2] bg-white sm:max-w-md dark:bg-[#121E36]">
           <DialogHeader>
             <DialogTitle className="font-display text-lg">Delete this bill?</DialogTitle>
             <DialogDescription>
@@ -543,13 +545,18 @@ export default function BillsPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <Button variant="outline" size="lg" onClick={() => setPendingDelete(null)}>
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => setPendingDelete(null)}
+              className={SECONDARY_BUTTON}
+            >
               Cancel
             </Button>
             <Button
               size="lg"
               onClick={confirmDelete}
-              className="bg-coral text-[#1A1206] hover:bg-coral/90"
+              className="h-11 rounded-xl bg-[#D93F3F] px-5 font-semibold text-white hover:bg-[#B93434] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B2A55]"
             >
               Delete bill
             </Button>

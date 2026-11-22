@@ -6,6 +6,7 @@ import { useMemo, useState, useSyncExternalStore } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { PageHeader } from "@/components/page-header"
 import { formatDate } from "@/lib/format"
 import { useStore, type Student } from "@/lib/store"
 import { cn } from "@/lib/utils"
@@ -13,8 +14,11 @@ import { cn } from "@/lib/utils"
 // Empty string means "All batches" for the batch filter.
 const ALL_BATCHES = ""
 
-const amberButtonClass =
-  "bg-[var(--amber)] text-[#1A1206] hover:bg-[var(--amber)]/90 focus-visible:ring-2 focus-visible:ring-[var(--amber)]"
+const primaryButtonClass =
+  "h-11 rounded-xl bg-[#0B2A55] px-5 font-semibold text-white hover:bg-[#133A72] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B2A55]"
+
+const cardClass =
+  "rounded-3xl border border-[#E6EBF2] bg-white shadow-[0_1px_2px_rgba(10,31,61,.04),0_4px_16px_rgba(10,31,61,.04)] dark:border-white/10 dark:bg-[#121E36]"
 
 // Local calendar date as "YYYY-MM-DD" (not UTC, so it matches the user's day).
 function localIsoDate(date: Date): string {
@@ -79,6 +83,9 @@ function AttendanceTile({ student, present, disabled, onToggle }: AttendanceTile
 
   const statusText = present === undefined ? "Not marked yet" : present ? "Present" : "Absent"
   const batchText = student.batch || "No batch"
+  // Present is solid navy; absent is muted text on white; not marked is a plain white card.
+  const isPresent = present === true
+  const tileText = isPresent ? "text-white" : present === false ? "text-[#5E6E87]" : "text-[#0A1F3D]"
 
   function handleClick() {
     onToggle()
@@ -100,23 +107,25 @@ function AttendanceTile({ student, present, disabled, onToggle }: AttendanceTile
       whileTap={reduce ? undefined : { scale: 0.96 }}
       transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 500, damping: 30 }}
       className={cn(
-        "flex min-h-28 flex-col items-start gap-2 rounded-2xl border p-3 text-left backdrop-blur-xl outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50",
-        present === undefined && "glass",
-        present === true && "border-[var(--mint)]/60 bg-[var(--mint)]/20",
-        present === false && "border-[var(--coral)]/60 bg-[var(--coral)]/20",
+        "card-lift flex min-h-28 flex-col items-start gap-2 rounded-3xl border p-3 text-left outline-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B2A55] disabled:opacity-50",
+        isPresent ? "border-[#0B2A55] bg-[#0B2A55]" : "border-[#E6EBF2] bg-white shadow-[0_1px_2px_rgba(10,31,61,.04),0_4px_16px_rgba(10,31,61,.04)]",
+        tileText,
       )}
     >
       <span
         aria-hidden="true"
-        className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[var(--amber)]/20 text-sm font-semibold text-foreground"
+        className={cn(
+          "flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold",
+          isPresent ? "bg-white/15 text-white" : "bg-[#0B2A55]/10 text-[#0B2A55]",
+        )}
       >
         {initialsOf(student.name)}
       </span>
       <span className="w-full min-w-0">
-        <span className="block truncate font-medium text-foreground">{student.name}</span>
-        <span className="block truncate text-xs text-muted-foreground">{batchText}</span>
+        <span className="block truncate font-medium text-current">{student.name}</span>
+        <span className="block truncate text-xs text-current opacity-70">{batchText}</span>
       </span>
-      <span className="mt-auto text-xs font-medium text-foreground">{statusText}</span>
+      <span className="mt-auto text-xs font-medium text-current">{statusText}</span>
     </motion.button>
   )
 }
@@ -207,7 +216,7 @@ export default function AttendancePage() {
   function renderBody() {
     if (!hydrated) {
       return (
-        <p className="glass rounded-2xl p-6 text-center text-muted-foreground">
+        <p className={`${cardClass} p-6 text-center text-[#5E6E87]`}>
           Loading attendance…
         </p>
       )
@@ -215,15 +224,15 @@ export default function AttendancePage() {
 
     if (students.length === 0) {
       return (
-        <div className="glass flex flex-col items-center gap-2 rounded-2xl p-6 text-center">
-          <p className="text-muted-foreground">
+        <div className={`${cardClass} flex flex-col items-center gap-2 p-6 text-center`}>
+          <p className="text-[#5E6E87]">
             Add a student first to start tracking attendance.
           </p>
           <Link
             href="/students"
             className={cn(
-              "mt-2 inline-flex h-9 items-center rounded-xl px-4 text-sm font-medium",
-              amberButtonClass,
+              "mt-2 inline-flex h-11 items-center rounded-xl px-5 text-sm font-semibold",
+              primaryButtonClass,
             )}
           >
             Go to students
@@ -247,10 +256,10 @@ export default function AttendancePage() {
                   aria-pressed={active}
                   onClick={() => setBatchFilter(batch)}
                   className={cn(
-                    "rounded-xl border px-3 py-1.5 text-sm font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    "h-11 rounded-xl border px-4 text-sm font-medium transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B2A55]",
                     active
-                      ? "border-transparent bg-[var(--amber)] text-[#1A1206]"
-                      : "glass text-muted-foreground hover:text-foreground",
+                      ? "border-[#0B2A55] bg-[#0B2A55] text-white"
+                      : "border-[#DCE3EE] bg-white text-[#0B2A55] hover:bg-[#F6F8FB] dark:border-white/10 dark:bg-[#121E36] dark:text-[#E6ECF5]",
                   )}
                 >
                   {batch || "All"}
@@ -275,14 +284,14 @@ export default function AttendancePage() {
 
         <section
           aria-labelledby="this-month-heading"
-          className="glass flex flex-col gap-4 rounded-2xl p-4"
+          className={`${cardClass} flex flex-col gap-4 p-5`}
         >
           <div className="flex flex-col gap-1">
-            <h2 id="this-month-heading" className="font-medium text-foreground">
+            <h2 id="this-month-heading" className="font-medium text-[#0A1F3D]">
               This month
             </h2>
-            <p className="text-xs text-muted-foreground">
-              Mint means present, coral means absent, and grey squares were not marked.
+            <p className="text-xs text-[#5E6E87]">
+              Teal means present, red means absent, and grey squares were not marked.
             </p>
           </div>
 
@@ -298,16 +307,16 @@ export default function AttendancePage() {
               return (
                 <li key={student.id} className="flex flex-col gap-2">
                   <div className="flex items-center justify-between gap-3">
-                    <p className="min-w-0 truncate text-sm font-medium text-foreground">
+                    <p className="min-w-0 truncate text-sm font-medium text-[#0A1F3D]">
                       {student.name}
                     </p>
-                    <p className="shrink-0 text-xs tabular-nums text-muted-foreground">
+                    <p className="shrink-0 text-xs tabular-nums text-[#5E6E87]">
                       {percent === null ? "No marks yet" : `${percent}% present`}
                     </p>
                   </div>
-                  <div aria-hidden="true" className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                  <div aria-hidden="true" className="h-2 w-full overflow-hidden rounded-full bg-[#EEF3FA]">
                     <div
-                      className="h-full rounded-full bg-[var(--mint)]"
+                      className="h-full rounded-full bg-[#0B2A55]"
                       style={{ width: `${percent ?? 0}%` }}
                     />
                   </div>
@@ -326,10 +335,10 @@ export default function AttendancePage() {
                           className={cn(
                             "aspect-square min-w-0 max-w-4 flex-1 rounded-[3px]",
                             present === undefined
-                              ? "bg-muted"
+                              ? "bg-[#EEF3FA]"
                               : present
-                                ? "bg-[var(--mint)]"
-                                : "bg-[var(--coral)]",
+                                ? "bg-[#0E9F8E]"
+                                : "bg-[#D93F3F]/10 ring-1 ring-inset ring-[#D93F3F]",
                           )}
                         />
                       )
@@ -346,34 +355,31 @@ export default function AttendancePage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div className="min-w-0">
-          <h1 className="font-display text-2xl font-semibold tracking-tight text-foreground">
-            Attendance
-          </h1>
-          <p className="text-sm text-muted-foreground">Tap a student to mark them present or absent.</p>
-        </div>
-
-        {hydrated && students.length > 0 ? (
-          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
-            <Input
-              type="date"
-              aria-label="Attendance date"
-              value={date}
-              max={todayIso || undefined}
-              onChange={(event) => setSelectedDate(event.target.value)}
-              className="w-full rounded-xl sm:w-auto"
-            />
-            <Button
-              className={amberButtonClass}
-              onClick={markAllPresent}
-              disabled={!date || visibleStudents.length === 0}
-            >
-              Mark all present
-            </Button>
-          </div>
-        ) : null}
-      </div>
+      <PageHeader
+        title="Attendance"
+        description="Tap a student to mark them present or absent."
+        action={
+          hydrated && students.length > 0 ? (
+            <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+              <Input
+                type="date"
+                aria-label="Attendance date"
+                value={date}
+                max={todayIso || undefined}
+                onChange={(event) => setSelectedDate(event.target.value)}
+                className="h-11 w-full rounded-xl border-[#DCE3EE] bg-white sm:w-auto"
+              />
+              <Button
+                className={primaryButtonClass}
+                onClick={markAllPresent}
+                disabled={!date || visibleStudents.length === 0}
+              >
+                Mark all present
+              </Button>
+            </div>
+          ) : null
+        }
+      />
 
       {renderBody()}
     </div>

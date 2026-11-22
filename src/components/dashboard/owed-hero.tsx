@@ -24,7 +24,7 @@ export function OwedHero({ owed, parents, oldestDays, onChase, onSeeForecast }: 
   const detail = oldestDays > 0 ? `, oldest ${oldestDays} days` : ", nothing overdue yet";
 
   return (
-    <section className="relative overflow-hidden rounded-3xl bg-[#1E3A6E] p-6 text-white sm:p-8">
+    <section className="relative overflow-hidden rounded-3xl bg-[#0B2A55] p-6 text-white sm:p-8">
       <style>{`
         @keyframes owed-hero-drift {
           from { transform: translateX(0); }
@@ -83,14 +83,14 @@ export function OwedHero({ owed, parents, oldestDays, onChase, onSeeForecast }: 
           <button
             type="button"
             onClick={onChase}
-            className="inline-flex h-11 items-center justify-center rounded-xl bg-[#7DD9CC] px-5 font-semibold text-[#1E3A6E] transition-transform focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white active:scale-[0.98]"
+            className="inline-flex h-11 items-center justify-center rounded-xl bg-[#0E9F8E] px-5 font-semibold text-white transition-transform hover:bg-[#0C8A7C] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white active:scale-[0.98]"
           >
             Chase them now
           </button>
           <button
             type="button"
             onClick={onSeeForecast}
-            className="inline-flex h-11 items-center justify-center rounded-xl border border-white/30 px-5 font-semibold text-white transition-transform focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white active:scale-[0.98]"
+            className="inline-flex h-11 items-center justify-center rounded-xl border border-white px-5 font-semibold text-white transition-transform hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white active:scale-[0.98]"
           >
             See forecast
           </button>

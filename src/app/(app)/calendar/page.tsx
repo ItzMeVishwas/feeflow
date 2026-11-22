@@ -4,6 +4,7 @@ import { useMemo, useState, useSyncExternalStore } from "react"
 
 import { DaySheet } from "@/components/calendar/day-sheet"
 import { MonthGrid } from "@/components/calendar/month-grid"
+import { PageHeader } from "@/components/page-header"
 import { buildMonthGrid, summarizeMonth } from "@/lib/calendar"
 import { formatINR, formatMonth } from "@/lib/format"
 import { toIsoDate } from "@/lib/invoice-status"
@@ -57,7 +58,7 @@ export default function CalendarPage() {
 
   if (!mounted) {
     return (
-      <p className="glass rounded-2xl p-6 text-center text-muted-foreground">
+      <p className="rounded-3xl border border-[#E6EBF2] bg-white p-6 text-center text-[#5E6E87] shadow-[0_1px_2px_rgba(10,31,61,.04),0_4px_16px_rgba(10,31,61,.04)] dark:border-white/10 dark:bg-[#121E36]">
         Loading calendar…
       </p>
     )
@@ -65,16 +66,10 @@ export default function CalendarPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="min-w-0">
-        <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground">
-          Calendar
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Expected <span className="tabular-nums text-foreground">{formatINR(summary.expected)}</span>,
-          {" "}received <span className="tabular-nums text-foreground">{formatINR(summary.received)}</span>{" "}
-          {isCurrentMonth ? "this month" : `in ${monthLabel}`}
-        </p>
-      </div>
+      <PageHeader
+        title="Calendar"
+        description={`Expected ${formatINR(summary.expected)}, received ${formatINR(summary.received)} ${isCurrentMonth ? "this month" : `in ${monthLabel}`}`}
+      />
 
       <MonthGrid
         year={view.year}

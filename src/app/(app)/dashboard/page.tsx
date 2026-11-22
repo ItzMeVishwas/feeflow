@@ -391,7 +391,7 @@ export default function DashboardPage() {
             <p className="text-sm text-[#5B6B84] dark:text-[#93A3BC] font-medium">Safe until</p>
             <span
               className={`mt-2 block text-2xl font-extrabold tracking-tight ${
-                noDip ? "text-[#3DD9A8]" : "text-[#0F1E3C] dark:text-[#E6ECF5]"
+                noDip ? "text-[#0E9F8E]" : "text-[#0F1E3C] dark:text-[#E6ECF5]"
               }`}
             >
               {safeUntilValue}

@@ -3,6 +3,8 @@
 import { useMemo, useState, useSyncExternalStore } from "react"
 
 import { Button } from "@/components/ui/button"
+import { PageHeader } from "@/components/page-header"
+import { StatusPill } from "@/components/status-pill"
 import { ReminderDialog } from "@/components/reminder-dialog"
 import { RecordPaymentDialog } from "@/components/record-payment-dialog"
 import { formatDate, formatINR, formatMonth } from "@/lib/format"
@@ -38,44 +40,40 @@ const STATUS_LABEL: Record<DisplayStatus, string> = {
 // Chip colours. Idle is a soft tint, selected is solid. The label always carries the meaning.
 const CHIP_CLASS: Record<Filter, { idle: string; active: string }> = {
   all: {
-    idle: "bg-foreground/5 text-foreground hover:bg-foreground/10",
-    active: "bg-foreground text-background",
+    idle: "bg-[#0A1F3D]/5 text-[#0A1F3D] hover:bg-[#0A1F3D]/10",
+    active: "bg-[#0B2A55] text-white",
   },
   due: {
-    idle: "bg-[var(--amber)]/15 text-foreground hover:bg-[var(--amber)]/25",
-    active: "bg-[var(--amber)] text-[#1A1206]",
+    idle: "bg-[#D98E04]/10 text-[#0A1F3D] hover:bg-[#D98E04]/20",
+    active: "bg-[#D98E04] text-[#0A1F3D]",
   },
   overdue: {
-    idle: "bg-[var(--coral)]/15 text-foreground hover:bg-[var(--coral)]/25",
-    active: "bg-[var(--coral)] text-[#1A1206]",
+    idle: "bg-[#D93F3F]/10 text-[#0A1F3D] hover:bg-[#D93F3F]/20",
+    active: "bg-[#D93F3F] text-white",
   },
   "part-paid": {
-    idle: "bg-[var(--amber)]/15 text-foreground hover:bg-[var(--amber)]/25",
-    active: "bg-[var(--amber)] text-[#1A1206]",
+    idle: "bg-[#D98E04]/10 text-[#0A1F3D] hover:bg-[#D98E04]/20",
+    active: "bg-[#D98E04] text-[#0A1F3D]",
   },
   paid: {
-    idle: "bg-[var(--mint)]/15 text-foreground hover:bg-[var(--mint)]/25",
-    active: "bg-[var(--mint)] text-[#0E1726]",
+    idle: "bg-[#12A150]/10 text-[#0A1F3D] hover:bg-[#12A150]/20",
+    active: "bg-[#12A150] text-white",
   },
 }
 
-// Status pill tints, same palette as the chips.
-const PILL_CLASS: Record<DisplayStatus | "part-paid", string> = {
-  paid: "bg-[var(--mint)]/20 text-foreground",
-  due: "bg-[var(--amber)]/20 text-foreground",
-  overdue: "bg-[var(--coral)]/20 text-foreground",
-  "part-paid": "bg-[var(--amber)]/20 text-foreground",
-}
+// Primary action colour: navy with white text.
+const primaryButtonClass =
+  "rounded-xl bg-[#0B2A55] font-semibold text-white hover:bg-[#133A72] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B2A55]"
 
-const amberButtonClass =
-  "bg-[var(--amber)] text-[#1A1206] hover:bg-[var(--amber)]/90 focus-visible:ring-2 focus-visible:ring-[var(--amber)]"
+// White content card: 1px border, 24px radius, soft two-part shadow.
+const cardClass =
+  "rounded-3xl border border-[#E6EBF2] bg-white shadow-[0_1px_2px_rgba(10,31,61,.04),0_4px_16px_rgba(10,31,61,.04)] dark:border-white/10 dark:bg-[#121E36]"
 
 const FOCUS_RING =
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B2A55]"
 
 // Focus ring for the promise controls.
-const OUTLINE_FOCUS =
-  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F2A93B]"
+const OUTLINE_FOCUS = FOCUS_RING
 
 // Subscribed to nothing; used only to detect the client after hydration.
 const subscribeNoop = () => () => {}
@@ -252,14 +250,14 @@ export default function InvoicesPage() {
     return (
       <li
         key={invoice.id}
-        className={`glass flex flex-col gap-3 rounded-2xl p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4 ${
+        className={`flex flex-col gap-3 px-4 py-3 transition-colors hover:bg-[#F6F8FB] sm:flex-row sm:items-center sm:justify-between sm:gap-4 ${
           promiseOpen ? "sm:flex-wrap" : ""
         }`}
       >
         <div className="flex min-w-0 items-center gap-3">
           <span
             aria-hidden="true"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--amber)]/20 text-sm font-semibold text-foreground"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#0B2A55]/10 text-sm font-semibold text-[#0B2A55]"
           >
             {initialsOf(studentName)}
           </span>
@@ -279,7 +277,7 @@ export default function InvoicesPage() {
             <p
               className={
                 status === "overdue"
-                  ? "font-medium tabular-nums text-[var(--coral)]"
+                  ? "font-medium tabular-nums text-[#D93F3F]"
                   : "tabular-nums text-foreground"
               }
             >
@@ -295,22 +293,14 @@ export default function InvoicesPage() {
             <p className="tabular-nums text-foreground">{invoice.remindersSent}</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <span
-              className={`rounded-xl px-2.5 py-1 text-xs font-medium ${PILL_CLASS[status]}`}
-            >
-              {STATUS_LABEL[status]}
-            </span>
+            <StatusPill tone={status}>{STATUS_LABEL[status]}</StatusPill>
             {status !== "paid" && isPartPaid(invoice) ? (
-              <span
-                className={`rounded-xl px-2.5 py-1 text-xs font-medium ${PILL_CLASS["part-paid"]}`}
-              >
-                Part paid
-              </span>
+              <StatusPill tone="due">Part paid</StatusPill>
             ) : null}
             {status !== "paid" && invoice.promisedDate ? (
-              <span className="rounded-xl bg-[#3DD9A8]/15 px-2.5 py-1 text-xs font-medium tabular-nums text-[#3DD9A8]">
+              <StatusPill tone="neutral">
                 Promised {formatDate(invoice.promisedDate)}
-              </span>
+              </StatusPill>
             ) : null}
           </div>
         </div>
@@ -329,7 +319,7 @@ export default function InvoicesPage() {
           {status !== "paid" ? (
             <Button
               size="sm"
-              className={amberButtonClass}
+              className={primaryButtonClass}
               aria-label={`Record payment for ${studentName}'s ${monthLabel} invoice`}
               onClick={() => {
                 setPaymentInvoice(invoice)
@@ -379,9 +369,9 @@ export default function InvoicesPage() {
                 setPromiseDraft(event.target.value)
                 setPromiseError("")
               }}
-              className={`rounded-xl border border-input bg-transparent px-3 py-1.5 text-sm text-foreground ${OUTLINE_FOCUS}`}
+              className={`rounded-xl border border-[#DCE3EE] bg-white px-3 py-1.5 text-sm text-[#0A1F3D] ${OUTLINE_FOCUS}`}
             />
-            <Button type="submit" size="sm" className={`${amberButtonClass} ${OUTLINE_FOCUS}`}>
+            <Button type="submit" size="sm" className={primaryButtonClass}>
               Save
             </Button>
             <Button
@@ -394,7 +384,7 @@ export default function InvoicesPage() {
               Cancel
             </Button>
             {promiseError ? (
-              <p role="alert" className="w-full text-sm text-[var(--coral)]">
+              <p role="alert" className="w-full text-sm text-[#D93F3F]">
                 {promiseError}
               </p>
             ) : null}
@@ -407,7 +397,7 @@ export default function InvoicesPage() {
   function renderBody() {
     if (invoices.length === 0) {
       return (
-        <div className="glass flex flex-col items-center gap-2 rounded-2xl p-6 text-center">
+        <div className={`${cardClass} flex flex-col items-center gap-2 p-6 text-center`}>
           <p className="font-medium text-foreground">No invoices yet.</p>
           <p className="text-sm text-muted-foreground">
             Generate this month&apos;s invoices to bill your students from your active students.
@@ -421,11 +411,14 @@ export default function InvoicesPage() {
         filter === "all"
           ? `No invoices for ${formatMonth(month)} yet. Generate this month's invoices to bill your students.`
           : "No invoices match this filter. Choose All to see every invoice."
-      return <p className="glass rounded-2xl p-6 text-center text-muted-foreground">{text}</p>
+      return <p className={`${cardClass} p-6 text-center text-muted-foreground`}>{text}</p>
     }
 
     return (
-      <ul role="list" className="flex flex-col gap-3">
+      <ul
+        role="list"
+        className={`${cardClass} divide-y divide-[#E6EBF2] overflow-hidden dark:divide-white/10`}
+      >
         {visibleRows.map(renderInvoiceRow)}
       </ul>
     )
@@ -433,7 +426,7 @@ export default function InvoicesPage() {
 
   if (!mounted) {
     return (
-      <p className="glass rounded-2xl p-6 text-center text-muted-foreground">
+      <p className={`${cardClass} p-6 text-center text-muted-foreground`}>
         Loading invoices…
       </p>
     )
@@ -441,19 +434,15 @@ export default function InvoicesPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="font-display text-2xl font-semibold tracking-tight text-foreground">
-            Invoices
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Bill your students each month and track what is still owed.
-          </p>
-        </div>
-        <Button className={amberButtonClass} onClick={handleGenerate}>
-          Generate this month&apos;s invoices
-        </Button>
-      </div>
+      <PageHeader
+        title="Invoices"
+        description="Every fee you have asked for, and what has come in."
+        action={
+          <Button className={primaryButtonClass} onClick={handleGenerate}>
+            Generate this month&apos;s invoices
+          </Button>
+        }
+      />
 
       {message && (
         <p role="status" className="text-sm text-muted-foreground">
@@ -486,7 +475,7 @@ export default function InvoicesPage() {
           aria-label="Filter by month"
           value={month}
           onChange={(event) => setMonth(event.target.value)}
-          className={`rounded-xl border border-input bg-transparent px-3 py-1.5 text-sm text-foreground ${FOCUS_RING}`}
+          className={`w-full rounded-xl border border-[#DCE3EE] bg-white px-3 py-1.5 text-sm text-[#0A1F3D] sm:w-auto ${FOCUS_RING}`}
         >
           <option value="all">All months</option>
           {monthOptions.map((m) => (

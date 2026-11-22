@@ -24,10 +24,10 @@ type Horizon = 30 | 60 | 90;
 const HORIZONS: Horizon[] = [30, 60, 90];
 
 // WaveChart sets colours as SVG attributes, which cannot read CSS variables,
-// so these are hex values. NAVY is the balance line; WaveChart derives its area
-// fill from this same colour, so the fill is navy-tinted. The zero-line region
-// below zero uses var(--coral) inside WaveChart.
-const NAVY = "#1E3A6E";
+// so these are hex values. NAVY is the balance line and MINT is its area fill.
+// The zero-line region below zero uses var(--coral) inside WaveChart.
+const NAVY = "#0B2A55";
+const MINT = "#0E9F8E";
 const BASELINE = "#94A3B8";
 
 // Parse "YYYY-MM-DD" as a local date to avoid UTC shifting the day.
@@ -88,7 +88,7 @@ export function RunwayChart({
       key: "balance",
       label: "Balance",
       color: NAVY,
-      fill: "#7DD9CC",
+      fill: MINT,
       values: points.map((p) => p.balance),
     });
     return series;
@@ -129,22 +129,22 @@ export function RunwayChart({
   }
 
   return (
-    <section className="glass-strong rounded-3xl p-5 sm:p-6">
+    <section className="rounded-3xl border border-[#E6EBF2] bg-white p-5 shadow-[0_1px_2px_rgba(10,31,61,.04),0_4px_16px_rgba(10,31,61,.04)] sm:p-6 dark:border-white/10 dark:bg-[#121E36]">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-lg font-semibold" style={{ fontFamily: "var(--font-bricolage)" }}>
+        <h2 className="text-lg font-semibold text-[#0A1F3D] dark:text-[#E6ECF5]" style={{ fontFamily: "var(--font-bricolage)" }}>
           Cash runway
         </h2>
-        <div role="group" aria-label="Forecast horizon" className="flex w-full gap-1 rounded-xl bg-black/5 p-1 sm:w-auto dark:bg-white/5">
+        <div role="group" aria-label="Forecast horizon" className="flex w-full gap-2 sm:w-auto">
           {HORIZONS.map((h) => (
             <button
               key={h}
               type="button"
               aria-pressed={horizon === h}
               onClick={() => setHorizon(h)}
-              className={`flex-1 rounded-xl px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 sm:flex-none ${
+              className={`flex-1 rounded-xl px-3 py-1.5 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B2A55] sm:flex-none ${
                 horizon === h
-                  ? "bg-white text-slate-900 shadow-sm dark:bg-white/15 dark:text-white"
-                  : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                  ? "bg-[#0B2A55] text-white hover:bg-[#133A72]"
+                  : "border border-[#DCE3EE] bg-white text-[#0B2A55] hover:bg-[#F6F8FB] dark:border-white/10 dark:bg-transparent dark:text-[#9DB6E6] dark:hover:bg-white/5"
               }`}
             >
               {h} days
@@ -154,7 +154,7 @@ export function RunwayChart({
       </div>
 
       {isEmpty ? (
-        <p className="mt-6 text-sm text-slate-600 dark:text-slate-400">
+        <p className="mt-6 text-sm text-[#5E6E87] dark:text-[#93A3BC]">
           Add a student and their monthly fee to see when cash runs short.
         </p>
       ) : (
@@ -162,7 +162,7 @@ export function RunwayChart({
           <div role="img" aria-label={ariaLabel} className="mt-5 w-full">
             <WaveChart series={waveSeries} labels={labels} height={240} zeroLine marker={marker} />
           </div>
-          <p className="mt-4 text-sm text-slate-700 dark:text-slate-300">{runwayMessage}</p>
+          <p className="mt-4 text-sm text-[#5E6E87] dark:text-[#93A3BC]">{runwayMessage}</p>
         </>
       )}
     </section>

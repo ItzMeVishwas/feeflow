@@ -13,17 +13,17 @@ const after = [
 export function BeforeAfter() {
   return (
     <section className="mx-auto max-w-5xl px-5 py-20 sm:px-8">
-      <h2 className="font-heading text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
+      <h2 className="font-heading text-3xl font-semibold tracking-tight text-[#0A1F3D] text-balance sm:text-4xl">
         Your month, before and after FeeFlow
       </h2>
 
       <div className="mt-12 grid gap-6 md:grid-cols-2">
-        <article className="glass rounded-2xl border border-[#FF6B6B]/30 p-6">
-          <h3 className="flex items-center gap-2 font-heading text-xl font-semibold tracking-tight">
-            <span aria-hidden="true" className="h-2 w-2 rounded-full bg-[#FF6B6B]" />
+        <article className="rounded-3xl border border-[#E6EBF2] bg-white p-6 shadow-[0_1px_2px_rgba(10,31,61,0.04),0_16px_40px_-20px_rgba(10,31,61,0.18)]">
+          <h3 className="flex items-center gap-2 font-heading text-xl font-semibold tracking-tight text-[#0A1F3D]">
+            <span aria-hidden="true" className="h-2 w-2 rounded-full bg-[#D93F3F]" />
             Your month today
           </h3>
-          <ul className="mt-5 flex flex-col gap-3 text-[#9AA8BC]">
+          <ul className="mt-5 flex flex-col gap-3 text-[#5E6E87]">
             {before.map((line) => (
               <li key={line} className="leading-relaxed">
                 {line}
@@ -32,12 +32,12 @@ export function BeforeAfter() {
           </ul>
         </article>
 
-        <article className="glass-strong relative overflow-hidden rounded-2xl border border-[#3DD9A8]/40 p-6 shadow-[inset_0_1px_0_0_rgba(61,217,168,0.6)]">
-          <h3 className="flex items-center gap-2 font-heading text-xl font-semibold tracking-tight">
-            <span aria-hidden="true" className="h-2 w-2 rounded-full bg-[#3DD9A8]" />
+        <article className="relative overflow-hidden rounded-3xl border border-[#0B2A55] bg-white p-6 shadow-[0_1px_2px_rgba(10,31,61,0.04),0_16px_40px_-20px_rgba(11,42,85,0.35)]">
+          <h3 className="flex items-center gap-2 font-heading text-xl font-semibold tracking-tight text-[#0A1F3D]">
+            <span aria-hidden="true" className="h-2 w-2 rounded-full bg-[#0E9F8E]" />
             Your month with FeeFlow
           </h3>
-          <ul className="mt-5 flex flex-col gap-3">
+          <ul className="mt-5 flex flex-col gap-3 text-[#0A1F3D]">
             {after.map((line) => (
               <li key={line} className="leading-relaxed">
                 {line}

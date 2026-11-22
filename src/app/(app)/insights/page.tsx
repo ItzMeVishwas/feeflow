@@ -5,6 +5,7 @@ import { useReducedMotion } from "motion/react"
 import { toast } from "sonner"
 
 import { WaveChart, type WaveSeries } from "@/components/charts/wave-chart"
+import { PageHeader } from "@/components/page-header"
 import { AnimatedNumber } from "@/components/ui/animated-number"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -22,20 +23,24 @@ import {
 } from "@/lib/insights"
 import { useStore, type FeeRules } from "@/lib/store"
 
-// Same values as the --mint and --coral tokens in globals.css. WaveChart sets these as SVG
-// stroke attributes, where CSS variables are not reliable, so the hex values are passed directly.
-const MINT = "#3DD9A8"
-const CORAL = "#FF6B6B"
+// Same values as the palette tokens. WaveChart sets these as SVG stroke attributes, where CSS
+// variables are not reliable, so the hex values are passed directly.
+const POSITIVE = "#0E9F8E"
+const NEGATIVE = "#D93F3F"
 const BAR_MAX_PX = 56
 const BAR_MIN_PX = 4
+
+const CARD_CLASS =
+  "rounded-3xl border border-[#E6EBF2] bg-white shadow-[0_1px_2px_rgba(10,31,61,.04),0_4px_16px_rgba(10,31,61,.04)] dark:border-white/10 dark:bg-[#121E36]"
 
 const DEFAULT_FEE_RULES: FeeRules = {
   lateFee: { enabled: false, amount: 100, afterDays: 10 },
   siblingDiscount: { enabled: false, percent: 10 },
 }
 
-const saveButtonClass = "bg-[#F2A93B] text-[#1A1206] hover:bg-[#F2A93B]/90"
-const fieldClass = "h-10 rounded-xl"
+const saveButtonClass =
+  "h-11 rounded-xl bg-[#0B2A55] px-5 font-semibold text-white hover:bg-[#133A72] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B2A55]"
+const fieldClass = "h-11 rounded-xl border-[#DCE3EE]"
 
 const formatWhole = (n: number) => formatINR(n, { wholeRupees: true })
 
@@ -47,9 +52,11 @@ function toNonNegative(value: string): number {
 export default function InsightsPage() {
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
-      <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground">
-        Insights
-      </h1>
+      <PageHeader
+        title="Insights"
+        description="See how your money moves, when parents pay and which fee rules to use."
+      />
+      <SummaryHero />
       <ProfitSection />
       <ReminderTimingSection />
       <FeeRulesSection />
@@ -57,53 +64,66 @@ export default function InsightsPage() {
   )
 }
 
-function ProfitSection() {
+function SummaryHero() {
   const invoices = useStore((s) => s.invoices)
   const bills = useStore((s) => s.bills)
   const reduceMotion = useReducedMotion()
 
-  const chart = profitMonths(invoices, bills)
   const headline = lastCompleteMonthSummary(invoices, bills)
+
+  return (
+    <section
+      aria-labelledby="summary-heading"
+      className="flex flex-col gap-2 rounded-3xl bg-[#0B2A55] p-6 text-white shadow-[0_1px_2px_rgba(10,31,61,.08),0_8px_24px_rgba(10,31,61,.12)] sm:p-7"
+    >
+      <h2 id="summary-heading" className="sr-only">
+        Net profit summary
+      </h2>
+      <p className="text-sm text-white/80">Net profit in {headline.label}</p>
+      <p className="font-heading text-4xl font-extrabold tracking-tight tabular-nums sm:text-5xl">
+        {reduceMotion ? (
+          formatWhole(headline.net)
+        ) : (
+          <AnimatedNumber value={headline.net} format={formatWhole} />
+        )}
+      </p>
+      <p className="text-sm text-white/80">
+        {headline.marginPct === null
+          ? "Margin not available yet"
+          : `Margin ${headline.marginPct}%`}
+      </p>
+    </section>
+  )
+}
+
+function ProfitSection() {
+  const invoices = useStore((s) => s.invoices)
+  const bills = useStore((s) => s.bills)
+
+  const chart = profitMonths(invoices, bills)
   const current = currentMonthSummary(invoices, bills)
   const currentLabel = new Date().toLocaleDateString("en-US", { month: "long" })
   const series: WaveSeries[] = [
-    { key: "income", label: "Income", color: MINT, values: chart.income },
-    { key: "expenses", label: "Expenses", color: CORAL, values: chart.expenses },
+    { key: "income", label: "Income", color: POSITIVE, values: chart.income },
+    { key: "expenses", label: "Expenses", color: NEGATIVE, values: chart.expenses },
   ]
 
   return (
     <section
       aria-labelledby="profit-heading"
-      className="glass flex flex-col gap-6 rounded-3xl p-5 sm:p-7"
+      className={`flex flex-col gap-6 p-5 sm:p-7 ${CARD_CLASS}`}
     >
       <div className="flex flex-col gap-1">
-        <h2 id="profit-heading" className="font-heading text-lg font-semibold text-foreground">
+        <h2 id="profit-heading" className="font-heading text-lg font-semibold text-[#0A1F3D] dark:text-[#E6ECF5]">
           Profit and expenses
         </h2>
-        <p className="text-sm text-muted-foreground">Last 6 months</p>
+        <p className="text-sm text-[#5E6E87] dark:text-[#93A3BC]">Last 6 months</p>
       </div>
 
       <WaveChart series={series} labels={chart.labels} height={200} zeroLine />
 
       <div className="flex flex-col gap-1">
-        <p className="text-sm text-muted-foreground">Net profit in {headline.label}</p>
-        <p
-          className={`font-heading text-4xl font-semibold tracking-tight tabular-nums ${
-            headline.net >= 0 ? "text-mint" : "text-coral"
-          }`}
-        >
-          {reduceMotion ? (
-            formatWhole(headline.net)
-          ) : (
-            <AnimatedNumber value={headline.net} format={formatWhole} />
-          )}
-        </p>
-        <p className="text-sm text-muted-foreground">
-          {headline.marginPct === null
-            ? "Margin not available yet"
-            : `Margin ${headline.marginPct}%`}
-        </p>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-[#5E6E87] dark:text-[#93A3BC]">
           {currentLabel} so far: {formatINR(current.income)} in, {formatINR(current.expenses)} out
         </p>
       </div>
@@ -119,9 +139,9 @@ function ReminderTimingSection() {
   return (
     <section
       aria-labelledby="reminder-heading"
-      className="glass flex flex-col gap-4 rounded-2xl p-5"
+      className={`flex flex-col gap-4 p-5 ${CARD_CLASS}`}
     >
-      <h2 id="reminder-heading" className="font-heading text-base font-semibold text-foreground">
+      <h2 id="reminder-heading" className="font-heading text-base font-semibold text-[#0A1F3D] dark:text-[#E6ECF5]">
         Best time to send reminders
       </h2>
 
@@ -137,22 +157,22 @@ function ReminderTimingSection() {
                 <div className="flex h-14 w-full items-end">
                   <div
                     className={`w-full rounded-full transition-colors ${
-                      isTop ? "bg-amber" : "bg-muted-foreground/25"
+                      isTop ? "bg-[#0B2A55] dark:bg-[#9DB6E6]" : "bg-[#5E6E87]/25"
                     }`}
                     style={{
                       height: heightPx,
-                      boxShadow: isTop ? "0 0 12px var(--amber)" : undefined,
+                      boxShadow: isTop ? "0 0 12px rgba(11,42,85,.35)" : undefined,
                     }}
                   />
                 </div>
-                <span className="h-4 text-xs tabular-nums text-amber">{isTop ? day : ""}</span>
+                <span className="h-4 text-xs tabular-nums text-[#0B2A55] dark:text-[#9DB6E6]">{isTop ? day : ""}</span>
               </div>
             )
           })}
         </div>
       )}
 
-      <p className="text-sm text-muted-foreground">{reminderSentence(topDays)}</p>
+      <p className="text-sm text-[#5E6E87] dark:text-[#93A3BC]">{reminderSentence(topDays)}</p>
     </section>
   )
 }
@@ -220,8 +240,8 @@ function FeeRulesSection() {
   }
 
   return (
-    <section aria-labelledby="fee-rules-heading" className="glass flex flex-col gap-6 rounded-2xl p-5">
-      <h2 id="fee-rules-heading" className="font-heading text-base font-semibold text-foreground">
+    <section aria-labelledby="fee-rules-heading" className={`flex flex-col gap-6 p-5 ${CARD_CLASS}`}>
+      <h2 id="fee-rules-heading" className="font-heading text-base font-semibold text-[#0A1F3D] dark:text-[#E6ECF5]">
         Fee rules
       </h2>
 
@@ -293,7 +313,7 @@ function FeeRulesSection() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-1 text-sm text-muted-foreground">
+      <div className="flex flex-col gap-1 text-sm text-[#5E6E87] dark:text-[#93A3BC]">
         <p>{`${formatINR(lateFees)} late fees you could charge this month`}</p>
         <p>{`${siblingFamilies} families get a sibling discount`}</p>
       </div>

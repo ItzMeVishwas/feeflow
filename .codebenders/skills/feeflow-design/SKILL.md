@@ -5,11 +5,11 @@ description: FeeFlow glass design system. Use for any UI, styling, layout or com
 
 FeeFlow is a fee + cash-flow back office for Indian home tutors. Follow this design system for all UI work.
 
-THEMES: Light is the default. Light: page #EEF2F7, cards #FFFFFF, ink #0F1E3C, muted #5B6B84. Dark is an option with navy tones: page #0B1426, surface #121E36, ink #E6ECF5, muted #93A3BC. No plum or lamp-amber glows. Calm and flat, not decorative.
+THEMES: Light is the default. Light: page #F6F8FB, cards #FFFFFF, ink #0A1F3D, muted #5E6E87. Dark is an option with navy tones: page #0B1426, surface #121E36, ink #E6ECF5, muted #93A3BC. Calm and flat, no glows, no plum or amber haze.
 
-COLOURS: primary navy #1E3A6E for links, focus and selected states. CTA mint #7DD9CC with navy text for main calls to action. Amber #F2A93B only for warnings and due-soon. Coral #E5484D for overdue and danger. Mint is also paid or positive. Expose as CSS variables.
+COLOURS: ink #0A1F3D; muted #5E6E87; primary navy #0B2A55 (hover #133A72, text #FFFFFF) for primary buttons, links, focus and selected states. Accent teal #0E9F8E with white text is the CTA accent for main calls to action. Success #12A150. Warning #D98E04, for warnings only. Danger #D93F3F. Pills are a 10% tint background with solid text of the same hue. Charts use a navy line with a teal accent. Expose as CSS variables.
 
-GLASS: Light mode has no blur. Cards are solid white with a 1px #E3E8F0 border and shadow 0 1px 2px rgba(15,30,60,.06), 0 8px 24px rgba(15,30,60,.06). Radius 24px on cards. Dark may keep a subtle blur.
+GLASS: Light mode has no blur. Cards are solid white with a 1px #E6EBF2 border and a very soft shadow, shadow-[0_1px_2px_rgba(10,31,61,.04),0_4px_16px_rgba(10,31,61,.04)]. Radius 24px on cards. Dark may keep a subtle blur.
 
 TYPE: Plus Jakarta Sans for everything: 700 and 800 for headings with tight tracking, 400 to 600 for body. Money uses tabular-nums and formatINR. Sentence case; no ALL-CAPS, no monospace, no middle dots, no arrows in buttons.
 
@@ -18,6 +18,7 @@ LAYOUT
 - Size cards by importance: one hero per page, supporting cards smaller. Avoid grids of identical cards.
 
 MOTION: One page-level fade and rise (8px, 200ms, ease out) via the app template. The sidebar active item uses a sliding pill (layoutId). Buttons press to 0.98 scale. Everything respects prefers-reduced-motion. No scroll-triggered fades, no decorative motion.
+List rows stagger once on load. Clickable cards lift 2px on hover (class card-lift, clickable cards only). Numbers count up once. Skeleton shimmer (class skeleton) while the store hydrates. All off under prefers-reduced-motion.
 
 COPY
 - Plain, active, specific to tutors and parents. Buttons say exactly what happens: "Send on WhatsApp", "Mark as paid". Empty states tell the user what to do next.

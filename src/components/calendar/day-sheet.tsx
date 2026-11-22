@@ -15,7 +15,7 @@ import { ReminderDialog } from "@/components/reminder-dialog"
 import type { CalendarDay } from "@/lib/calendar"
 import { formatDate, formatINR } from "@/lib/format"
 import { useStore } from "@/lib/store"
-import { cn } from "@/lib/utils"
+import { type PillTone, StatusPill } from "@/components/status-pill"
 
 type DaySheetProps = {
   date: string // "YYYY-MM-DD" of the selected day
@@ -30,14 +30,17 @@ const FEE_STATUS_LABEL: Record<CalendarDay["fees"][number]["status"], string> = 
   unpaid: "Due",
 }
 
-const FEE_STATUS_CLASS: Record<CalendarDay["fees"][number]["status"], string> = {
-  paid: "bg-[var(--mint)]/20",
-  overdue: "bg-[var(--coral)]/20",
-  unpaid: "bg-[var(--amber)]/20",
+const FEE_STATUS_TONE: Record<CalendarDay["fees"][number]["status"], PillTone> = {
+  paid: "paid",
+  overdue: "overdue",
+  unpaid: "due",
 }
 
-const amberButtonClass =
-  "bg-[var(--amber)] text-[#1A1206] hover:bg-[var(--amber)]/90 focus-visible:ring-2 focus-visible:ring-[var(--amber)]"
+const primaryButtonClass =
+  "h-11 rounded-xl bg-[#0B2A55] px-5 font-semibold text-white hover:bg-[#133A72] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B2A55]"
+
+const secondaryButtonClass =
+  "h-11 rounded-xl border border-[#DCE3EE] bg-white text-[#0B2A55] hover:bg-[#F6F8FB] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B2A55]"
 
 export function DaySheet({ date, day, open, onOpenChange }: DaySheetProps) {
   const students = useStore((s) => s.students)
@@ -60,48 +63,43 @@ export function DaySheet({ date, day, open, onOpenChange }: DaySheetProps) {
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent>
+        <DialogContent className="rounded-3xl border-[#E6EBF2] bg-white dark:bg-[#121E36]">
           <DialogHeader>
             <DialogTitle>{formatDate(date)}</DialogTitle>
             <DialogDescription>Fees and bills for this day.</DialogDescription>
           </DialogHeader>
 
           {isEmpty ? (
-            <p className="text-sm text-muted-foreground">Nothing due on this day.</p>
+            <p className="text-sm text-[#5E6E87]">Nothing due on this day.</p>
           ) : null}
 
           {fees.length > 0 ? (
             <section aria-labelledby="day-fees" className="flex flex-col gap-2">
-              <h3 id="day-fees" className="text-sm font-medium text-muted-foreground">
+              <h3 id="day-fees" className="text-sm font-medium text-[#5E6E87]">
                 Fees due
               </h3>
-              <ul role="list" className="flex flex-col gap-2">
+              <ul role="list" className="flex flex-col divide-y divide-[#E6EBF2]">
                 {fees.map((fee) => {
                   const invoice = invoices.find((i) => i.id === fee.invoiceId)
                   const isPaid = fee.status === "paid"
                   return (
                     <li
                       key={fee.invoiceId}
-                      className="glass flex flex-col gap-3 rounded-2xl p-3 sm:flex-row sm:items-center sm:justify-between"
+                      className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between"
                     >
                       <div className="min-w-0">
-                        <p className="truncate font-medium text-foreground">{fee.studentName}</p>
-                        <p className="tabular-nums text-sm text-foreground">{formatINR(fee.amount)}</p>
+                        <p className="truncate font-medium text-[#0A1F3D]">{fee.studentName}</p>
+                        <p className="tabular-nums text-sm text-[#0A1F3D]">{formatINR(fee.amount)}</p>
                       </div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <span
-                          className={cn(
-                            "rounded-xl px-2.5 py-1 text-xs font-medium text-foreground",
-                            FEE_STATUS_CLASS[fee.status],
-                          )}
-                        >
+                        <StatusPill tone={FEE_STATUS_TONE[fee.status]}>
                           {FEE_STATUS_LABEL[fee.status]}
-                        </span>
+                        </StatusPill>
                         {!isPaid && invoice ? (
                           <>
                             <Button
                               size="sm"
-                              className={amberButtonClass}
+                              className={primaryButtonClass}
                               aria-label={`Record payment for ${fee.studentName}`}
                               onClick={() => {
                                 setPaymentInvoiceId(invoice.id)
@@ -114,6 +112,7 @@ export function DaySheet({ date, day, open, onOpenChange }: DaySheetProps) {
                             <Button
                               variant="outline"
                               size="sm"
+                              className={secondaryButtonClass}
                               aria-label={`Remind ${fee.studentName}`}
                               onClick={() => {
                                 setReminderInvoiceId(invoice.id)
@@ -134,17 +133,17 @@ export function DaySheet({ date, day, open, onOpenChange }: DaySheetProps) {
 
           {bills.length > 0 ? (
             <section aria-labelledby="day-bills" className="flex flex-col gap-2">
-              <h3 id="day-bills" className="text-sm font-medium text-muted-foreground">
+              <h3 id="day-bills" className="text-sm font-medium text-[#5E6E87]">
                 Bills going out
               </h3>
-              <ul role="list" className="flex flex-col gap-2">
+              <ul role="list" className="flex flex-col divide-y divide-[#E6EBF2]">
                 {bills.map((bill) => (
                   <li
                     key={bill.billId}
-                    className="glass flex items-center justify-between gap-3 rounded-2xl p-3"
+                    className="flex items-center justify-between gap-3 py-3"
                   >
-                    <p className="min-w-0 truncate font-medium text-foreground">{bill.name}</p>
-                    <p className="shrink-0 tabular-nums text-sm text-foreground">{formatINR(bill.amount)}</p>
+                    <p className="min-w-0 truncate font-medium text-[#0A1F3D]">{bill.name}</p>
+                    <p className="shrink-0 tabular-nums text-sm text-[#0A1F3D]">{formatINR(bill.amount)}</p>
                   </li>
                 ))}
               </ul>

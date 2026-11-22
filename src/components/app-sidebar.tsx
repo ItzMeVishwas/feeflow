@@ -9,6 +9,7 @@ import {
   CalendarDays,
   FileText,
   LayoutDashboard,
+  MoreHorizontal,
   Pin,
   PinOff,
   Receipt,
@@ -23,6 +24,12 @@ import {
 import { cn } from "@/lib/utils"
 import { useStore } from "@/lib/store"
 import { Logo, LogoMark } from "@/components/brand/logo"
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet"
 
 type NavItem = {
   label: string
@@ -41,17 +48,24 @@ const navItems: NavItem[] = [
   { label: "Insights", href: "/insights", icon: Sparkles },
 ]
 
-// Bills is desktop-only. The bottom bar shows six items (grid-cols-6), and
-// Settings is included here because it lives outside navItems on desktop.
-const mobileNavItems: NavItem[] = [
+// Phone bottom bar: four main tabs plus a "More" button that opens a sheet
+// with the remaining pages. Hrefs and icons match navItems.
+const mobileTabItems: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Students", href: "/students", icon: Users },
-  { label: "Attendance", href: "/attendance", icon: CalendarCheck },
   { label: "Invoices", href: "/invoices", icon: FileText },
+  { label: "Calendar", href: "/calendar", icon: CalendarDays },
+]
+
+// Pages shown in the "More" sheet on phones.
+const moreNavItems: NavItem[] = [
+  { label: "Attendance", href: "/attendance", icon: CalendarCheck },
+  { label: "Bills", href: "/bills", icon: Receipt },
   { label: "Forecast", href: "/forecast", icon: TrendingUp },
   { label: "Insights", href: "/insights", icon: Sparkles },
   { label: "Settings", href: "/settings", icon: Settings },
 ]
+
 
 // True for the exact route and for nested routes, e.g. "/invoices/abc".
 function isActivePath(pathname: string, href: string): boolean {
@@ -240,35 +254,93 @@ export function AppSidebar() {
 
 export function AppMobileNav() {
   const pathname = usePathname()
+  const [moreOpen, setMoreOpen] = useState(false)
+  const moreActive = moreNavItems.some((item) =>
+    isActivePath(pathname, item.href)
+  )
 
   return (
-    <nav
-      aria-label="Main"
-      className="glass fixed inset-x-4 bottom-4 z-40 rounded-2xl p-2 md:hidden"
-    >
-      <ul className="grid grid-cols-7 gap-1">
-        {mobileNavItems.map((item) => {
-          const Icon = item.icon
-          const isActive = isActivePath(pathname, item.href)
-          return (
-            <li key={item.href} className="min-w-0">
-              <Link
-                href={item.href}
-                aria-current={isActive ? "page" : undefined}
-                className={cn(
-                  "flex min-h-11 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-xs font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                  isActive
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                )}
-              >
-                <Icon className="size-5 shrink-0" aria-hidden="true" />
-                <span className="truncate">{item.label}</span>
-              </Link>
-            </li>
-          )
-        })}
-      </ul>
-    </nav>
+    <>
+      <nav
+        aria-label="Main"
+        className="glass fixed inset-x-4 bottom-4 z-40 rounded-2xl p-2 md:hidden"
+      >
+        <ul className="grid grid-cols-5 gap-1">
+          {mobileTabItems.map((item) => {
+            const Icon = item.icon
+            const isActive = isActivePath(pathname, item.href)
+            return (
+              <li key={item.href} className="min-w-0">
+                <Link
+                  href={item.href}
+                  aria-current={isActive ? "page" : undefined}
+                  className={cn(
+                    "flex min-h-11 w-full flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-[11px] font-medium transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F2A93B]",
+                    isActive
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  )}
+                >
+                  <Icon className="size-5 shrink-0" aria-hidden="true" />
+                  <span className="max-w-full truncate">{item.label}</span>
+                </Link>
+              </li>
+            )
+          })}
+          <li className="min-w-0">
+            <button
+              type="button"
+              aria-haspopup="dialog"
+              aria-expanded={moreOpen}
+              onClick={() => setMoreOpen(true)}
+              className={cn(
+                "flex min-h-11 w-full flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-[11px] font-medium transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F2A93B]",
+                moreActive
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
+            >
+              <MoreHorizontal className="size-5 shrink-0" aria-hidden="true" />
+              <span className="max-w-full truncate">More</span>
+            </button>
+          </li>
+        </ul>
+      </nav>
+
+      <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
+        <SheetContent side="bottom" className="rounded-t-2xl pb-4">
+          <SheetHeader>
+            <SheetTitle>More</SheetTitle>
+          </SheetHeader>
+          <nav aria-label="More pages" className="px-2">
+            <ul className="flex flex-col gap-1">
+              {moreNavItems.map((item) => {
+                const Icon = item.icon
+                const isActive = isActivePath(pathname, item.href)
+                return (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      aria-current={isActive ? "page" : undefined}
+                      onClick={() => setMoreOpen(false)}
+                      className={cn(
+                        "flex h-11 w-full items-center gap-3 rounded-xl px-3 text-sm font-medium transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F2A93B]",
+                        isActive
+                          ? "bg-primary text-primary-foreground"
+                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      )}
+                    >
+                      <Icon className="size-5 shrink-0" aria-hidden="true" />
+                      <span>{item.label}</span>
+                    </Link>
+                  </li>
+                )
+              })}
+            </ul>
+          </nav>
+        </SheetContent>
+      </Sheet>
+    </>
   )
 }
+

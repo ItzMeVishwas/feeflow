@@ -309,16 +309,16 @@ function RowActions({ name, onEdit, onDelete }: RowActionsProps) {
 }
 
 const ROW_CLASS =
-  "flex flex-col gap-3 px-4 py-3 transition-colors hover:bg-[#F6F8FB] sm:flex-row sm:items-center sm:justify-between"
+  "flex flex-col gap-3 px-4 py-3 transition-colors hover:bg-muted sm:flex-row sm:items-center sm:justify-between"
 
 const CARD =
-  "rounded-3xl border border-[#E6EBF2] bg-white p-5 shadow-[0_1px_2px_rgba(10,31,61,.04),0_4px_16px_rgba(10,31,61,.04)] dark:border-white/10 dark:bg-[#121E36] sm:p-6"
+  "rounded-3xl border border-border bg-card p-5 shadow-[0_1px_2px_rgba(10,31,61,.04),0_4px_16px_rgba(10,31,61,.04)] dark:border-white/10 dark:bg-[#121E36] sm:p-6"
 
 const PRIMARY_BUTTON =
-  "h-11 rounded-xl bg-[#0B2A55] px-5 font-semibold text-white hover:bg-[#133A72] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B2A55]"
+  "h-11 rounded-xl bg-[#0B2A55] px-5 font-semibold text-white hover:bg-[#133A72] dark:bg-[#0E9F8E] dark:hover:bg-[#0C8A7B] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B2A55]"
 
 const SECONDARY_BUTTON =
-  "h-11 rounded-xl border border-[#DCE3EE] bg-white text-[#0B2A55] hover:bg-[#F6F8FB] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B2A55]"
+  "h-11 rounded-xl border border-border bg-card text-foreground hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B2A55]"
 
 // ---------- Page ----------
 
@@ -395,13 +395,13 @@ export default function BillsPage() {
       {/* Supporting summary */}
       <section aria-label="Summary" className="grid gap-3 sm:grid-cols-2">
         <div className={CARD}>
-          <p className="text-sm text-[#5E6E87]">Monthly fixed costs</p>
+          <p className="text-sm text-muted-foreground">Monthly fixed costs</p>
           <p className="font-display mt-1 text-2xl font-semibold tabular-nums text-foreground">
             {formatINR(monthlyFixed, { wholeRupees: true })}
           </p>
         </div>
         <div className={CARD}>
-          <p className="text-sm text-[#5E6E87]">Runway</p>
+          <p className="text-sm text-muted-foreground">Runway</p>
           {runwayDays !== null ? (
             <p className="font-display mt-1 text-2xl font-semibold tabular-nums text-[#12A150]">
               {runwayDays} {runwayDays === 1 ? "day" : "days"}
@@ -414,7 +414,7 @@ export default function BillsPage() {
 
       {bills.length === 0 ? (
         <section className={`${CARD} flex flex-col items-start gap-4`}>
-          <p className="text-base text-[#0A1F3D]">
+          <p className="text-base text-foreground">
             No bills yet. Add rent, internet or salaries so your forecast is accurate.
           </p>
           <Button size="lg" onClick={openAdd} className={PRIMARY_BUTTON}>
@@ -448,12 +448,12 @@ export default function BillsPage() {
           {weeks.map((group) => (
             <div key={group.label} className="mt-6">
               <h3 className="text-sm font-medium text-muted-foreground">{group.label}</h3>
-              <ul className="mt-2 divide-y divide-[#E6EBF2]">
+              <ul className="mt-2 divide-y divide-border">
                 {group.rows.map((occ) => (
                   <motion.li key={occ.key} {...motionProps} className={ROW_CLASS}>
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="truncate font-medium text-[#0A1F3D]">{occ.name}</p>
+                        <p className="truncate font-medium text-foreground">{occ.name}</p>
                         {occ.recurring && <StatusPill tone="neutral">Monthly</StatusPill>}
                       </div>
                       <p className="text-sm text-muted-foreground">{formatDate(occ.date)}</p>
@@ -487,12 +487,12 @@ export default function BillsPage() {
           <p className="text-sm text-muted-foreground">
             Every stored bill, including one-off bills outside the 60-day window.
           </p>
-          <ul className="mt-4 divide-y divide-[#E6EBF2]">
+          <ul className="mt-4 divide-y divide-border">
             {allBills.map((bill) => (
               <motion.li key={bill.id} {...motionProps} className={ROW_CLASS}>
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="truncate font-medium text-[#0A1F3D]">{bill.name}</p>
+                    <p className="truncate font-medium text-foreground">{bill.name}</p>
                     {bill.recurringMonthly && <StatusPill tone="neutral">Monthly</StatusPill>}
                   </div>
                   <p className="text-sm text-muted-foreground">
@@ -523,7 +523,7 @@ export default function BillsPage() {
           if (!open) setFormState(null)
         }}
       >
-        <DialogContent className="rounded-3xl border-[#E6EBF2] bg-white sm:max-w-md dark:bg-[#121E36]">
+        <DialogContent className="rounded-3xl border-border bg-card sm:max-w-md dark:bg-[#121E36]">
           <BillForm bill={formState?.bill ?? null} onClose={() => setFormState(null)} />
         </DialogContent>
       </Dialog>
@@ -535,7 +535,7 @@ export default function BillsPage() {
           if (!open) setPendingDelete(null)
         }}
       >
-        <DialogContent className="rounded-3xl border-[#E6EBF2] bg-white sm:max-w-md dark:bg-[#121E36]">
+        <DialogContent className="rounded-3xl border-border bg-card sm:max-w-md dark:bg-[#121E36]">
           <DialogHeader>
             <DialogTitle className="font-display text-lg">Delete this bill?</DialogTitle>
             <DialogDescription>

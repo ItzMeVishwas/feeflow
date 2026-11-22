@@ -30,7 +30,7 @@ export function LandingNav() {
         aria-label="Main"
         className="mx-auto mt-3 flex max-w-6xl items-center justify-between gap-4 rounded-2xl border border-[#E6EBF2] bg-white/90 px-4 py-3 shadow-[0_1px_2px_rgba(10,31,61,0.04),0_12px_32px_-16px_rgba(10,31,61,0.18)] backdrop-blur-md sm:px-6"
       >
-        <Logo />
+        <Logo className="[&>span:last-child]:text-[#0A1F3D]" />
 
         <ul className="hidden items-center gap-1 md:flex">
           {sectionLinks.map((link) => (

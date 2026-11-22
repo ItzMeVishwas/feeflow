@@ -40,34 +40,34 @@ const STATUS_LABEL: Record<DisplayStatus, string> = {
 // Chip colours. Idle is a soft tint, selected is solid. The label always carries the meaning.
 const CHIP_CLASS: Record<Filter, { idle: string; active: string }> = {
   all: {
-    idle: "bg-[#0A1F3D]/5 text-[#0A1F3D] hover:bg-[#0A1F3D]/10",
-    active: "bg-[#0B2A55] text-white",
+    idle: "bg-[#0A1F3D]/5 text-foreground hover:bg-[#0A1F3D]/10",
+    active: "bg-[#0B2A55] dark:bg-[#0E9F8E] text-white",
   },
   due: {
-    idle: "bg-[#D98E04]/10 text-[#0A1F3D] hover:bg-[#D98E04]/20",
+    idle: "bg-[#D98E04]/10 text-foreground hover:bg-[#D98E04]/20",
     active: "bg-[#D98E04] text-[#0A1F3D]",
   },
   overdue: {
-    idle: "bg-[#D93F3F]/10 text-[#0A1F3D] hover:bg-[#D93F3F]/20",
+    idle: "bg-[#D93F3F]/10 text-foreground hover:bg-[#D93F3F]/20",
     active: "bg-[#D93F3F] text-white",
   },
   "part-paid": {
-    idle: "bg-[#D98E04]/10 text-[#0A1F3D] hover:bg-[#D98E04]/20",
+    idle: "bg-[#D98E04]/10 text-foreground hover:bg-[#D98E04]/20",
     active: "bg-[#D98E04] text-[#0A1F3D]",
   },
   paid: {
-    idle: "bg-[#12A150]/10 text-[#0A1F3D] hover:bg-[#12A150]/20",
+    idle: "bg-[#12A150]/10 text-foreground hover:bg-[#12A150]/20",
     active: "bg-[#12A150] text-white",
   },
 }
 
-// Primary action colour: navy with white text.
+// Primary action colour: navy with white text (teal in dark mode).
 const primaryButtonClass =
-  "rounded-xl bg-[#0B2A55] font-semibold text-white hover:bg-[#133A72] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B2A55]"
+  "rounded-xl bg-[#0B2A55] font-semibold text-white hover:bg-[#133A72] dark:bg-[#0E9F8E] dark:hover:bg-[#0C8A7B] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B2A55]"
 
 // White content card: 1px border, 24px radius, soft two-part shadow.
 const cardClass =
-  "rounded-3xl border border-[#E6EBF2] bg-white shadow-[0_1px_2px_rgba(10,31,61,.04),0_4px_16px_rgba(10,31,61,.04)] dark:border-white/10 dark:bg-[#121E36]"
+  "rounded-3xl border border-border bg-card shadow-[0_1px_2px_rgba(10,31,61,.04),0_4px_16px_rgba(10,31,61,.04)] dark:border-white/10 dark:bg-[#121E36]"
 
 const FOCUS_RING =
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B2A55]"
@@ -250,14 +250,14 @@ export default function InvoicesPage() {
     return (
       <li
         key={invoice.id}
-        className={`flex flex-col gap-3 px-4 py-3 transition-colors hover:bg-[#F6F8FB] sm:flex-row sm:items-center sm:justify-between sm:gap-4 ${
+        className={`flex flex-col gap-3 px-4 py-3 transition-colors hover:bg-muted sm:flex-row sm:items-center sm:justify-between sm:gap-4 ${
           promiseOpen ? "sm:flex-wrap" : ""
         }`}
       >
         <div className="flex min-w-0 items-center gap-3">
           <span
             aria-hidden="true"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#0B2A55]/10 text-sm font-semibold text-[#0B2A55]"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary"
           >
             {initialsOf(studentName)}
           </span>
@@ -369,7 +369,7 @@ export default function InvoicesPage() {
                 setPromiseDraft(event.target.value)
                 setPromiseError("")
               }}
-              className={`rounded-xl border border-[#DCE3EE] bg-white px-3 py-1.5 text-sm text-[#0A1F3D] ${OUTLINE_FOCUS}`}
+              className={`rounded-xl border border-border bg-card px-3 py-1.5 text-sm text-foreground ${OUTLINE_FOCUS}`}
             />
             <Button type="submit" size="sm" className={primaryButtonClass}>
               Save
@@ -417,7 +417,7 @@ export default function InvoicesPage() {
     return (
       <ul
         role="list"
-        className={`${cardClass} divide-y divide-[#E6EBF2] overflow-hidden dark:divide-white/10`}
+        className={`${cardClass} divide-y divide-border overflow-hidden dark:divide-white/10`}
       >
         {visibleRows.map(renderInvoiceRow)}
       </ul>
@@ -475,7 +475,7 @@ export default function InvoicesPage() {
           aria-label="Filter by month"
           value={month}
           onChange={(event) => setMonth(event.target.value)}
-          className={`w-full rounded-xl border border-[#DCE3EE] bg-white px-3 py-1.5 text-sm text-[#0A1F3D] sm:w-auto ${FOCUS_RING}`}
+          className={`w-full rounded-xl border border-border bg-card px-3 py-1.5 text-sm text-foreground sm:w-auto ${FOCUS_RING}`}
         >
           <option value="all">All months</option>
           {monthOptions.map((m) => (

@@ -21,16 +21,16 @@ type MonthGridProps = {
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
 const SECONDARY_BUTTON =
-  "rounded-xl border border-[#DCE3EE] bg-white text-[#0B2A55] hover:bg-[#F6F8FB] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B2A55]"
+  "rounded-xl border border-border bg-card text-foreground hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B2A55]"
 
 // Chip colour plus a word, so the status never depends on colour alone.
 const FEE_TONE: Record<CalendarDay["fees"][number]["status"], { chip: string; dot: string; word: string }> = {
-  paid: { chip: "bg-[#12A150]/10 text-[#12A150]", dot: "bg-[#12A150]", word: "Paid" },
-  overdue: { chip: "bg-[#D93F3F]/10 text-[#D93F3F]", dot: "bg-[#D93F3F]", word: "Overdue" },
-  unpaid: { chip: "bg-[#0B2A55]/10 text-[#0B2A55]", dot: "bg-[#0B2A55]", word: "Due" },
+  paid: { chip: "bg-[#12A150]/10 text-[#12A150] dark:text-[#4ADE80]", dot: "bg-[#12A150]", word: "Paid" },
+  overdue: { chip: "bg-[#D93F3F]/10 text-[#D93F3F] dark:text-[#FF8A8D]", dot: "bg-[#D93F3F]", word: "Overdue" },
+  unpaid: { chip: "bg-[#0B2A55]/10 text-[#0B2A55] dark:bg-[#7FA0D9]/15 dark:text-[#9DB6E6]", dot: "bg-[#0B2A55]", word: "Due" },
 }
 
-const BILL_TONE = { chip: "bg-[#0A1F3D]/5 text-[#5E6E87]", dot: "bg-[#5E6E87]" }
+const BILL_TONE = { chip: "bg-[#0A1F3D]/5 text-muted-foreground", dot: "bg-[#5E6E87]" }
 
 type ChipView = { key: string; label: string; word: string | null; chip: string; dot: string }
 
@@ -56,7 +56,7 @@ function DayCell({
   // Out-of-month cells are dimmed and not clickable.
   if (!day.inMonth) {
     return (
-      <div className="flex min-h-12 justify-start rounded-xl bg-[#EEF2F7] p-1 text-sm tabular-nums text-[#5E6E87] sm:min-h-28 sm:p-2">
+      <div className="flex min-h-12 justify-start rounded-xl bg-muted/50 p-1 text-sm tabular-nums text-muted-foreground sm:min-h-28 sm:p-2">
         {dayNumber}
       </div>
     )
@@ -96,25 +96,25 @@ function DayCell({
       aria-current={isToday ? "date" : undefined}
       onClick={() => onSelect(day.date)}
       className={cn(
-      "flex min-h-12 min-w-0 flex-col items-start gap-1 overflow-hidden rounded-xl bg-[#F6F8FB] p-1 text-left transition-colors hover:bg-[#E6EBF2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B2A55] sm:min-h-28 sm:p-2",
-      isToday && "ring-2 ring-[#0B2A55]",
+      "flex min-h-12 min-w-0 flex-col items-start gap-1 overflow-hidden rounded-xl bg-muted p-1 text-left transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B2A55] sm:min-h-28 sm:p-2",
+      isToday && "ring-2 ring-primary",
       )}
     >
-      <span className="text-sm font-medium tabular-nums text-[#0A1F3D]">{dayNumber}</span>
+      <span className="text-sm font-medium tabular-nums text-foreground">{dayNumber}</span>
 
       {/* Named chips on every screen width. */}
       <span className="flex w-full min-w-0 flex-col gap-0.5">
         {shown.map((chip) => (
           <span
             key={chip.key}
-            className={cn("flex min-w-0 flex-col rounded-xl px-1.5 py-0.5 text-[#0A1F3D]", chip.chip)}
+            className={cn("flex min-w-0 flex-col rounded-xl px-1.5 py-0.5 text-foreground", chip.chip)}
           >
             <span className="block truncate text-[10px] font-medium sm:text-xs">{chip.label}</span>
             {chip.word ? <span className="hidden text-[10px] sm:block">{chip.word}</span> : null}
           </span>
         ))}
         {hiddenCount > 0 ? (
-          <span className="px-1 text-[10px] text-[#5E6E87]">+{hiddenCount} more</span>
+          <span className="px-1 text-[10px] text-muted-foreground">+{hiddenCount} more</span>
         ) : null}
       </span>
     </button>
@@ -136,10 +136,10 @@ export function MonthGrid({
   return (
     <section
       aria-label="Month calendar"
-      className="rounded-3xl border border-[#E6EBF2] bg-white p-3 shadow-[0_1px_2px_rgba(10,31,61,.04),0_4px_16px_rgba(10,31,61,.04)] dark:border-white/10 dark:bg-[#121E36] sm:p-5"
+      className="rounded-3xl border border-border bg-card p-3 shadow-[0_1px_2px_rgba(10,31,61,.04),0_4px_16px_rgba(10,31,61,.04)] dark:border-white/10 dark:bg-[#121E36] sm:p-5"
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="font-heading text-lg font-semibold text-[#0A1F3D]">{monthLabel}</h2>
+        <h2 className="font-heading text-lg font-semibold text-foreground">{monthLabel}</h2>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={onToday} className={SECONDARY_BUTTON}>
             Today
@@ -155,7 +155,7 @@ export function MonthGrid({
 
       <div className="mt-4 grid grid-cols-7 gap-1 sm:gap-2">
         {WEEKDAYS.map((weekday) => (
-          <span key={weekday} className="text-center text-xs font-medium text-[#5E6E87]">
+          <span key={weekday} className="text-center text-xs font-medium text-muted-foreground">
             {weekday}
           </span>
         ))}

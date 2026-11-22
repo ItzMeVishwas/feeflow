@@ -58,7 +58,7 @@ export default function CalendarPage() {
 
   if (!mounted) {
     return (
-      <p className="rounded-3xl border border-[#E6EBF2] bg-white p-6 text-center text-[#5E6E87] shadow-[0_1px_2px_rgba(10,31,61,.04),0_4px_16px_rgba(10,31,61,.04)] dark:border-white/10 dark:bg-[#121E36]">
+      <p className="rounded-3xl border border-border bg-card p-6 text-center text-muted-foreground shadow-[0_1px_2px_rgba(10,31,61,.04),0_4px_16px_rgba(10,31,61,.04)] dark:border-white/10 dark:bg-[#121E36]">
         Loading calendar…
       </p>
     )

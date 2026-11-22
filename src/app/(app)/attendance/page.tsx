@@ -116,7 +116,7 @@ function AttendanceTile({ student, present, disabled, onToggle }: AttendanceTile
         aria-hidden="true"
         className={cn(
           "flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold",
-          isPresent ? "bg-white/15 text-white" : "bg-[#0B2A55]/10 text-[#0B2A55] dark:bg-[#7FA0D9]/15 dark:text-[#9DB6E6]",
+          isPresent ? "bg-white/15 text-white" : "bg-[#0B2A55]/10 text-primary dark:bg-[#7FA0D9]/15 dark:text-[#9DB6E6]",
         )}
       >
         {initialsOf(student.name)}

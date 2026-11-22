@@ -45,17 +45,27 @@ export type Settings = {
   reminderLanguage: "english" | "hinglish"
 }
 
+export type AttendanceRecord = {
+  id: string
+  studentId: string
+  date: string // ISO local date "YYYY-MM-DD"
+  present: boolean
+}
+
 export type AppState = {
   students: Student[]
   invoices: Invoice[]
   bills: Bill[]
   settings: Settings
+  attendance: AttendanceRecord[]
 }
 
 export type AppActions = {
   addStudent: (student: Omit<Student, "id">) => void
   updateStudent: (id: string, patch: Partial<Omit<Student, "id">>) => void
   removeStudent: (id: string) => void
+
+  markAttendance: (studentId: string, date: string, present: boolean) => void
 
   addInvoice: (invoice: Omit<Invoice, "id">) => void
   updateInvoice: (id: string, patch: Partial<Omit<Invoice, "id">>) => void
@@ -102,6 +112,7 @@ export const useStore = create<AppStore>()(
       invoices: [],
       bills: [],
       settings: defaultSettings,
+      attendance: [],
 
       addStudent: (student) =>
         set((state) => ({
@@ -115,6 +126,25 @@ export const useStore = create<AppStore>()(
         set((state) => ({
           students: state.students.filter((s) => s.id !== id),
         })),
+
+      // Upsert: one record per student per date. Re-marking updates the existing record.
+      markAttendance: (studentId, date, present) =>
+        set((state) => {
+          const exists = state.attendance.some((a) => a.studentId === studentId && a.date === date)
+          if (exists) {
+            return {
+              attendance: state.attendance.map((a) =>
+                a.studentId === studentId && a.date === date ? { ...a, present } : a,
+              ),
+            }
+          }
+          return {
+            attendance: [
+              ...state.attendance,
+              { id: crypto.randomUUID(), studentId, date, present },
+            ],
+          }
+        }),
 
       addInvoice: (invoice) =>
         set((state) => ({
@@ -185,11 +215,11 @@ export const useStore = create<AppStore>()(
       // so clear the data first and restore the user's settings afterwards.
       resetToDemo: () => {
         const { settings } = get()
-        set({ students: [], invoices: [], bills: [] })
+        set({ students: [], invoices: [], bills: [], attendance: [] })
         seedDemoData()
         set({ settings })
       },
-      clearAll: () => set({ students: [], invoices: [], bills: [] }),
+      clearAll: () => set({ students: [], invoices: [], bills: [], attendance: [] }),
     }),
     {
       name: "feeflow-store",

@@ -98,6 +98,7 @@ export default function ForecastPage() {
   const invoices = useStore((s) => s.invoices)
   const bills = useStore((s) => s.bills)
   const settings = useStore((s) => s.settings)
+  const attendance = useStore((s) => s.attendance)
 
   const [horizon, setHorizon] = useState<Horizon>(DEFAULT_HORIZON)
   const [delayStudentId, setDelayStudentId] = useState("")
@@ -127,8 +128,8 @@ export default function ForecastPage() {
   }, [delayStudentId, delayDays, dropStudentId, expenseAmount, expenseDate])
 
   const state = useMemo(
-    () => ({ students, invoices, bills, settings }),
-    [students, invoices, bills, settings],
+    () => ({ students, invoices, bills, settings, attendance }),
+    [students, invoices, bills, settings, attendance],
   )
   const baselineSummary = useMemo(
     () => summarizeForecast(buildForecast(state, horizon)),

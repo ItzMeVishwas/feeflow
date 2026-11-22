@@ -34,14 +34,15 @@ export function TodayRail() {
   const invoices = useStore((s) => s.invoices)
   const bills = useStore((s) => s.bills)
   const settings = useStore((s) => s.settings)
+  const attendance = useStore((s) => s.attendance)
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null)
   const [chaseOpen, setChaseOpen] = useState(false)
 
   const today = toIsoDate(new Date())
 
   const chaseQueue = useMemo(
-    () => buildChaseQueue({ students, invoices, bills, settings }, today),
-    [students, invoices, bills, settings, today],
+    () => buildChaseQueue({ students, invoices, bills, settings, attendance }, today),
+    [students, invoices, bills, settings, attendance, today],
   )
 
   const studentById = useMemo(
@@ -56,9 +57,14 @@ export function TodayRail() {
   const forecastFirstBelowZero = useMemo(
     () =>
       summarizeForecast(
-        buildForecast({ students, invoices, bills, settings }, FORECAST_DAYS, undefined, today),
+        buildForecast(
+          { students, invoices, bills, settings, attendance },
+          FORECAST_DAYS,
+          undefined,
+          today,
+        ),
       ).firstBelowZeroDate,
-    [students, invoices, bills, settings, today],
+    [students, invoices, bills, settings, attendance, today],
   )
 
   const actions = useMemo(

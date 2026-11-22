@@ -54,6 +54,7 @@ export function AssistantCard() {
   const invoices = useStore((s) => s.invoices)
   const bills = useStore((s) => s.bills)
   const settings = useStore((s) => s.settings)
+  const attendance = useStore((s) => s.attendance)
   const [chaseOpen, setChaseOpen] = useState(false)
   const [dismissed, setDismissed] = useState(false)
   const [hovered, setHovered] = useState(false)
@@ -61,13 +62,13 @@ export function AssistantCard() {
   const today = toIsoDate(new Date())
 
   const advice = useMemo(
-    () => getAdvice({ students, invoices, bills, settings }, today),
-    [students, invoices, bills, settings, today],
+    () => getAdvice({ students, invoices, bills, settings, attendance }, today),
+    [students, invoices, bills, settings, attendance, today],
   )
 
   const chaseQueue = useMemo(
-    () => buildChaseQueue({ students, invoices, bills, settings }, today),
-    [students, invoices, bills, settings, today],
+    () => buildChaseQueue({ students, invoices, bills, settings, attendance }, today),
+    [students, invoices, bills, settings, attendance, today],
   )
 
   const relatedStudents = useMemo(

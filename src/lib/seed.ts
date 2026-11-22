@@ -1,4 +1,4 @@
-import { useStore, type InvoiceStatus } from "./store"
+import { useStore, type InvoiceStatus, type Student } from "./store"
 
 type DemoStudent = {
   name: string
@@ -44,6 +44,43 @@ function previousMonths(count: number): string[] {
 function addDays(isoDate: string, days: number): string {
   const [year, month, day] = isoDate.split("-").map(Number)
   return new Date(Date.UTC(year, month - 1, day + days)).toISOString().slice(0, 10)
+}
+
+// Local calendar date as "YYYY-MM-DD" (same as localIsoDate in store.ts).
+function localIsoDate(date: Date): string {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, "0")
+  const d = String(date.getDate()).padStart(2, "0")
+  return `${y}-${m}-${d}`
+}
+
+// Indexes into DEMO_STUDENTS of the students who also miss a few extra classes.
+const EXTRA_ABSENCE_INDEXES = [3, 7, 10]
+
+// Seeds Mon-Fri attendance for the last 6 weeks, ending today. Mostly present:
+// about 1 in 10 weekdays is absent per student, and a few students miss more often.
+// Uses markAttendance (upsert), so running it again does not create duplicates.
+function seedAttendance(savedStudents: Student[]): void {
+  const { markAttendance } = useStore.getState()
+  const today = new Date()
+
+  const weekdays: string[] = []
+  for (let back = 41; back >= 0; back--) {
+    const day = new Date(today.getFullYear(), today.getMonth(), today.getDate() - back)
+    const dayOfWeek = day.getDay()
+    if (dayOfWeek !== 0 && dayOfWeek !== 6) weekdays.push(localIsoDate(day))
+  }
+
+  DEMO_STUDENTS.forEach((demo, index) => {
+    const student = savedStudents.find((s) => s.parentPhone === demo.parentPhone)
+    if (!student) return
+
+    weekdays.forEach((date, dayIndex) => {
+      const regularAbsence = (index * 5 + dayIndex * 3) % 10 === 0
+      const extraAbsence = EXTRA_ABSENCE_INDEXES.includes(index) && dayIndex % 8 === 2
+      markAttendance(student.id, date, !(regularAbsence || extraAbsence))
+    })
+  })
 }
 
 // Fills the store with fake Pune tuition data: students, 4 months of invoices,
@@ -124,6 +161,8 @@ export function seedDemoData(): void {
       })
     }
   })
+
+  seedAttendance(savedStudents)
 
   const currentDueDate = `${formatMonth(new Date())}-05`
 

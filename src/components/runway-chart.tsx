@@ -48,6 +48,7 @@ export function RunwayChart({
   const invoices = useStore((s) => s.invoices);
   const bills = useStore((s) => s.bills);
   const settings = useStore((s) => s.settings);
+  const attendance = useStore((s) => s.attendance);
 
   const [localHorizon, setLocalHorizon] = useState<Horizon>(30);
   const horizon = controlledHorizon ?? localHorizon;
@@ -56,12 +57,15 @@ export function RunwayChart({
   const drawBaseline = showBaseline && scenario !== undefined;
 
   const points = useMemo(
-    () => buildForecast({ students, invoices, bills, settings }, horizon, scenario),
-    [students, invoices, bills, settings, horizon, scenario],
+    () => buildForecast({ students, invoices, bills, settings, attendance }, horizon, scenario),
+    [students, invoices, bills, settings, attendance, horizon, scenario],
   );
   const baselinePoints = useMemo(
-    () => (drawBaseline ? buildForecast({ students, invoices, bills, settings }, horizon) : null),
-    [drawBaseline, students, invoices, bills, settings, horizon],
+    () =>
+      drawBaseline
+        ? buildForecast({ students, invoices, bills, settings, attendance }, horizon)
+        : null,
+    [drawBaseline, students, invoices, bills, settings, attendance, horizon],
   );
   const summary = useMemo(() => summarizeForecast(points), [points]);
 

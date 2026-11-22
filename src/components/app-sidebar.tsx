@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation"
 import { motion, useReducedMotion } from "framer-motion"
 import { useEffect, useRef, useState } from "react"
 import {
+  CalendarCheck,
   FileText,
   LayoutDashboard,
   Pin,
@@ -29,16 +30,18 @@ type NavItem = {
 const navItems: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Students", href: "/students", icon: Users },
+  { label: "Attendance", href: "/attendance", icon: CalendarCheck },
   { label: "Invoices", href: "/invoices", icon: FileText },
   { label: "Bills", href: "/bills", icon: Receipt },
   { label: "Forecast", href: "/forecast", icon: TrendingUp },
 ]
 
-// Bills is desktop-only. The bottom bar shows five items (grid-cols-5), and
+// Bills is desktop-only. The bottom bar shows six items (grid-cols-6), and
 // Settings is included here because it lives outside navItems on desktop.
 const mobileNavItems: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Students", href: "/students", icon: Users },
+  { label: "Attendance", href: "/attendance", icon: CalendarCheck },
   { label: "Invoices", href: "/invoices", icon: FileText },
   { label: "Forecast", href: "/forecast", icon: TrendingUp },
   { label: "Settings", href: "/settings", icon: Settings },
@@ -245,7 +248,7 @@ export function AppMobileNav() {
       aria-label="Main"
       className="glass fixed inset-x-4 bottom-4 z-40 rounded-2xl p-2 md:hidden"
     >
-      <ul className="grid grid-cols-5 gap-1">
+      <ul className="grid grid-cols-6 gap-1">
         {mobileNavItems.map((item) => {
           const Icon = item.icon
           const isActive = isActivePath(pathname, item.href)

@@ -1,6 +1,6 @@
 # FeeFlow
 
-Live demo: LIVE_URL_HERE
+Live demo: https://feeflow-omega-sand.vercel.app
 
 Fee and cash-flow back office for Indian home tutors.
 

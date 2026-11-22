@@ -108,9 +108,6 @@ export function seedDemoData(): void {
   const latestMonth = currentMonth
   // The month just before the current one: the most recent month that is fully past.
   const lastPastMonth = months[months.length - 2]
-  // Last day of the current month, so its due date is never in the past.
-  const lastDayOfCurrentMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-  const currentMonthDueDate = `${currentMonth}-${String(lastDayOfCurrentMonth.getDate()).padStart(2, "0")}`
 
   DEMO_STUDENTS.forEach((demo, index) => {
     const student = savedStudents.find((s) => s.parentPhone === demo.parentPhone)
@@ -120,14 +117,19 @@ export function seedDemoData(): void {
       const isLate = demo.latePaymentDays > 0
 
       if (month === latestMonth) {
-        // Current month: everything is unpaid but not yet due.
+        // Current month: due on day 5-9, spread across students. Only the first student has paid.
+        const currentDueDate = `${month}-${String(5 + (index % 5)).padStart(2, "0")}`
+        const isFirstPaid = index === 0
         addInvoice({
           studentId: student.id,
           amount: demo.monthlyFee,
           month,
-          dueDate: currentMonthDueDate,
-          status: "unpaid",
-          paidDate: null,
+          dueDate: currentDueDate,
+          status: isFirstPaid ? "paid" : "unpaid",
+          paidDate: isFirstPaid ? currentDueDate : null,
+          ...(isFirstPaid
+            ? { payments: [{ id: crypto.randomUUID(), amount: demo.monthlyFee, date: currentDueDate }] }
+            : {}),
           remindersSent: 0,
         })
         continue

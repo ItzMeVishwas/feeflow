@@ -99,27 +99,20 @@ function DayCell({
     >
       <span className="text-sm font-medium tabular-nums text-foreground">{dayNumber}</span>
 
-      {/* Wide screens: named chips. */}
-      <span className="hidden w-full min-w-0 flex-col gap-0.5 sm:flex">
+      {/* Named chips on every screen width. */}
+      <span className="flex w-full min-w-0 flex-col gap-0.5">
         {shown.map((chip) => (
           <span
             key={chip.key}
             className={cn("flex min-w-0 flex-col rounded-xl px-1.5 py-0.5 text-foreground", chip.chip)}
           >
-            <span className="block truncate text-xs font-medium">{chip.label}</span>
-            {chip.word ? <span className="block text-[10px]">{chip.word}</span> : null}
+            <span className="block truncate text-[10px] font-medium sm:text-xs">{chip.label}</span>
+            {chip.word ? <span className="hidden text-[10px] sm:block">{chip.word}</span> : null}
           </span>
         ))}
         {hiddenCount > 0 ? (
           <span className="px-1 text-[10px] text-muted-foreground">+{hiddenCount} more</span>
         ) : null}
-      </span>
-
-      {/* Narrow screens: one dot per item, since the names do not fit. */}
-      <span aria-hidden="true" className="mt-auto flex flex-wrap gap-0.5 sm:hidden">
-        {chips.slice(0, 3).map((chip) => (
-          <span key={chip.key} className={cn("size-1.5 rounded-full", chip.dot)} />
-        ))}
       </span>
     </button>
   )

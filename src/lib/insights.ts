@@ -26,12 +26,13 @@ function incomeEntries(invoice: Invoice): { month: string; amount: number }[] {
   return []
 }
 
-// Bills carry no paid status, so every bill counts as an expense in the month of its
-// dueDate. Recurring monthly bills count in every month from that month onward.
+// Bills carry no paid status, so a non-recurring bill counts as an expense only in the month of
+// its dueDate. Recurring monthly bills (e.g. rent) are ongoing costs, so they count in every
+// month of the window.
 function billMonthsAndAmount(bill: Bill, months: string[]): { month: string; amount: number }[] {
   const startKey = monthKey(parseIsoDate(bill.dueDate))
   if (bill.recurringMonthly) {
-    return months.filter((m) => m >= startKey).map((m) => ({ month: m, amount: bill.amount }))
+    return months.map((m) => ({ month: m, amount: bill.amount }))
   }
   return months.includes(startKey) ? [{ month: startKey, amount: bill.amount }] : []
 }
@@ -83,6 +84,28 @@ export function currentMonthSummary(
     expenses: expensesNow,
     net: netNow,
     marginPct: incomeNow > 0 ? Math.round((netNow / incomeNow) * 100) : null,
+  }
+}
+
+// Summary for the last complete calendar month (the month before now's month), used for the
+// headline. profitMonths ends at now's month, so the last complete month is the second-to-last slot.
+export function lastCompleteMonthSummary(
+  invoices: Invoice[],
+  bills: Bill[],
+  now: Date = new Date(),
+): { label: string; income: number; expenses: number; net: number; marginPct: number | null } {
+  const { income, expenses, net } = profitMonths(invoices, bills, now)
+  const idx = income.length - 2
+  const incomePrev = income[idx]
+  const expensesPrev = expenses[idx]
+  const netPrev = net[idx]
+  const previousMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+  return {
+    label: previousMonth.toLocaleDateString("en-US", { month: "long" }),
+    income: incomePrev,
+    expenses: expensesPrev,
+    net: netPrev,
+    marginPct: incomePrev > 0 ? Math.round((netPrev / incomePrev) * 100) : null,
   }
 }
 

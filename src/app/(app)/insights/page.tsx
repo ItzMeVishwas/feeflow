@@ -14,6 +14,7 @@ import { formatINR } from "@/lib/format"
 import {
   currentMonthSummary,
   familiesWithSibling,
+  lastCompleteMonthSummary,
   lateFeesThisMonth,
   paymentDayHistogram,
   profitMonths,
@@ -62,7 +63,9 @@ function ProfitSection() {
   const reduceMotion = useReducedMotion()
 
   const chart = profitMonths(invoices, bills)
-  const summary = currentMonthSummary(invoices, bills)
+  const headline = lastCompleteMonthSummary(invoices, bills)
+  const current = currentMonthSummary(invoices, bills)
+  const currentLabel = new Date().toLocaleDateString("en-US", { month: "long" })
   const series: WaveSeries[] = [
     { key: "income", label: "Income", color: MINT, values: chart.income },
     { key: "expenses", label: "Expenses", color: CORAL, values: chart.expenses },
@@ -83,22 +86,25 @@ function ProfitSection() {
       <WaveChart series={series} labels={chart.labels} height={200} zeroLine />
 
       <div className="flex flex-col gap-1">
-        <p className="text-sm text-muted-foreground">Net profit this month</p>
+        <p className="text-sm text-muted-foreground">Net profit in {headline.label}</p>
         <p
           className={`font-heading text-4xl font-semibold tracking-tight tabular-nums ${
-            summary.net >= 0 ? "text-mint" : "text-coral"
+            headline.net >= 0 ? "text-mint" : "text-coral"
           }`}
         >
           {reduceMotion ? (
-            formatWhole(summary.net)
+            formatWhole(headline.net)
           ) : (
-            <AnimatedNumber value={summary.net} format={formatWhole} />
+            <AnimatedNumber value={headline.net} format={formatWhole} />
           )}
         </p>
         <p className="text-sm text-muted-foreground">
-          {summary.marginPct === null
+          {headline.marginPct === null
             ? "Margin not available yet"
-            : `Margin ${summary.marginPct}%`}
+            : `Margin ${headline.marginPct}%`}
+        </p>
+        <p className="text-sm text-muted-foreground">
+          {currentLabel} so far: {formatINR(current.income)} in, {formatINR(current.expenses)} out
         </p>
       </div>
     </section>

@@ -164,11 +164,12 @@ export function seedDemoData(): void {
 
   seedAttendance(savedStudents)
 
-  const currentDueDate = `${formatMonth(new Date())}-05`
+  const billMonth = formatMonth(new Date())
 
-  addBill({ name: "Rent", amount: 18000, dueDate: currentDueDate, recurringMonthly: true })
-  addBill({ name: "Internet", amount: 999, dueDate: currentDueDate, recurringMonthly: true })
-  addBill({ name: "Assistant salary", amount: 12000, dueDate: currentDueDate, recurringMonthly: true })
+  addBill({ name: "Room rent", amount: 6500, dueDate: `${billMonth}-05`, recurringMonthly: true })
+  addBill({ name: "Internet", amount: 999, dueDate: `${billMonth}-10`, recurringMonthly: true })
+  addBill({ name: "Part-time assistant", amount: 4000, dueDate: `${billMonth}-01`, recurringMonthly: true })
+  addBill({ name: "Printer + whiteboard", amount: 3200, dueDate: addDays(localIsoDate(new Date()), 21), recurringMonthly: false })
 
   updateSettings({
     tutorName: "Priya Sharma",

@@ -15,10 +15,10 @@ import { cn } from "@/lib/utils"
 const ALL_BATCHES = ""
 
 const primaryButtonClass =
-  "h-11 rounded-xl bg-[#0B2A55] px-5 font-semibold text-white hover:bg-[#133A72] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B2A55]"
+  "h-11 rounded-xl bg-[#0B2A55] px-5 font-semibold text-white hover:bg-[#133A72] dark:bg-[#0E9F8E] dark:hover:bg-[#0C8A7B] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B2A55]"
 
 const cardClass =
-  "rounded-3xl border border-[#E6EBF2] bg-white shadow-[0_1px_2px_rgba(10,31,61,.04),0_4px_16px_rgba(10,31,61,.04)] dark:border-white/10 dark:bg-[#121E36]"
+  "rounded-3xl border border-border bg-card shadow-[0_1px_2px_rgba(10,31,61,.04),0_4px_16px_rgba(10,31,61,.04)] dark:border-white/10 dark:bg-[#121E36]"
 
 // Local calendar date as "YYYY-MM-DD" (not UTC, so it matches the user's day).
 function localIsoDate(date: Date): string {
@@ -85,7 +85,7 @@ function AttendanceTile({ student, present, disabled, onToggle }: AttendanceTile
   const batchText = student.batch || "No batch"
   // Present is solid navy; absent is muted text on white; not marked is a plain white card.
   const isPresent = present === true
-  const tileText = isPresent ? "text-white" : present === false ? "text-[#5E6E87]" : "text-[#0A1F3D]"
+  const tileText = isPresent ? "text-white" : present === false ? "text-muted-foreground" : "text-foreground"
 
   function handleClick() {
     onToggle()
@@ -108,7 +108,7 @@ function AttendanceTile({ student, present, disabled, onToggle }: AttendanceTile
       transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 500, damping: 30 }}
       className={cn(
         "card-lift flex min-h-28 flex-col items-start gap-2 rounded-3xl border p-3 text-left outline-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B2A55] disabled:opacity-50",
-        isPresent ? "border-[#0B2A55] bg-[#0B2A55]" : "border-[#E6EBF2] bg-white shadow-[0_1px_2px_rgba(10,31,61,.04),0_4px_16px_rgba(10,31,61,.04)]",
+        isPresent ? "border-[#0B2A55] bg-[#0B2A55] dark:border-[#0E9F8E] dark:bg-[#0E9F8E]" : "border-border bg-card shadow-[0_1px_2px_rgba(10,31,61,.04),0_4px_16px_rgba(10,31,61,.04)]",
         tileText,
       )}
     >
@@ -116,7 +116,7 @@ function AttendanceTile({ student, present, disabled, onToggle }: AttendanceTile
         aria-hidden="true"
         className={cn(
           "flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold",
-          isPresent ? "bg-white/15 text-white" : "bg-[#0B2A55]/10 text-[#0B2A55]",
+          isPresent ? "bg-white/15 text-white" : "bg-[#0B2A55]/10 text-[#0B2A55] dark:bg-[#7FA0D9]/15 dark:text-[#9DB6E6]",
         )}
       >
         {initialsOf(student.name)}
@@ -216,7 +216,7 @@ export default function AttendancePage() {
   function renderBody() {
     if (!hydrated) {
       return (
-        <p className={`${cardClass} p-6 text-center text-[#5E6E87]`}>
+        <p className={`${cardClass} p-6 text-center text-muted-foreground`}>
           Loading attendance…
         </p>
       )
@@ -225,7 +225,7 @@ export default function AttendancePage() {
     if (students.length === 0) {
       return (
         <div className={`${cardClass} flex flex-col items-center gap-2 p-6 text-center`}>
-          <p className="text-[#5E6E87]">
+          <p className="text-muted-foreground">
             Add a student first to start tracking attendance.
           </p>
           <Link
@@ -258,8 +258,8 @@ export default function AttendancePage() {
                   className={cn(
                     "h-11 rounded-xl border px-4 text-sm font-medium transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B2A55]",
                     active
-                      ? "border-[#0B2A55] bg-[#0B2A55] text-white"
-                      : "border-[#DCE3EE] bg-white text-[#0B2A55] hover:bg-[#F6F8FB] dark:border-white/10 dark:bg-[#121E36] dark:text-[#E6ECF5]",
+                      ? "border-[#0B2A55] bg-[#0B2A55] text-white dark:border-[#0E9F8E] dark:bg-[#0E9F8E]"
+                      : "border-border bg-card text-primary hover:bg-muted dark:border-white/10 dark:bg-[#121E36] dark:text-[#E6ECF5]",
                   )}
                 >
                   {batch || "All"}
@@ -287,10 +287,10 @@ export default function AttendancePage() {
           className={`${cardClass} flex flex-col gap-4 p-5`}
         >
           <div className="flex flex-col gap-1">
-            <h2 id="this-month-heading" className="font-medium text-[#0A1F3D]">
+            <h2 id="this-month-heading" className="font-medium text-foreground">
               This month
             </h2>
-            <p className="text-xs text-[#5E6E87]">
+            <p className="text-xs text-muted-foreground">
               Teal means present, red means absent, and grey squares were not marked.
             </p>
           </div>
@@ -307,16 +307,16 @@ export default function AttendancePage() {
               return (
                 <li key={student.id} className="flex flex-col gap-2">
                   <div className="flex items-center justify-between gap-3">
-                    <p className="min-w-0 truncate text-sm font-medium text-[#0A1F3D]">
+                    <p className="min-w-0 truncate text-sm font-medium text-foreground">
                       {student.name}
                     </p>
-                    <p className="shrink-0 text-xs tabular-nums text-[#5E6E87]">
+                    <p className="shrink-0 text-xs tabular-nums text-muted-foreground">
                       {percent === null ? "No marks yet" : `${percent}% present`}
                     </p>
                   </div>
-                  <div aria-hidden="true" className="h-2 w-full overflow-hidden rounded-full bg-[#EEF3FA]">
+                  <div aria-hidden="true" className="h-2 w-full overflow-hidden rounded-full bg-muted">
                     <div
-                      className="h-full rounded-full bg-[#0B2A55]"
+                      className="h-full rounded-full bg-[#0B2A55] dark:bg-[#9DB6E6]"
                       style={{ width: `${percent ?? 0}%` }}
                     />
                   </div>
@@ -335,7 +335,7 @@ export default function AttendancePage() {
                           className={cn(
                             "aspect-square min-w-0 max-w-4 flex-1 rounded-[3px]",
                             present === undefined
-                              ? "bg-[#EEF3FA]"
+                              ? "bg-muted"
                               : present
                                 ? "bg-[#0E9F8E]"
                                 : "bg-[#D93F3F]/10 ring-1 ring-inset ring-[#D93F3F]",
@@ -367,7 +367,7 @@ export default function AttendancePage() {
                 value={date}
                 max={todayIso || undefined}
                 onChange={(event) => setSelectedDate(event.target.value)}
-                className="h-11 w-full rounded-xl border-[#DCE3EE] bg-white sm:w-auto"
+                className="h-11 w-full rounded-xl border-border bg-card sm:w-auto"
               />
               <Button
                 className={primaryButtonClass}

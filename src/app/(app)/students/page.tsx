@@ -63,11 +63,11 @@ const formFields: {
 
 // Primary action colour: navy with white text.
 const primaryButtonClass =
-  "rounded-xl bg-[#0B2A55] font-semibold text-white hover:bg-[#133A72] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B2A55]"
+  "rounded-xl bg-[#0B2A55] font-semibold text-white hover:bg-[#133A72] dark:bg-[#0E9F8E] dark:hover:bg-[#0C8A7B] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B2A55]"
 
 // White content card: 1px border, 24px radius, soft two-part shadow.
 const cardClass =
-  "rounded-3xl border border-[#E6EBF2] bg-white shadow-[0_1px_2px_rgba(10,31,61,.04),0_4px_16px_rgba(10,31,61,.04)] dark:border-white/10 dark:bg-[#121E36]"
+  "rounded-3xl border border-border bg-card shadow-[0_1px_2px_rgba(10,31,61,.04),0_4px_16px_rgba(10,31,61,.04)] dark:border-white/10 dark:bg-[#121E36]"
 
 function validateStudentForm(values: StudentFormValues): StudentFormErrors {
   const errors: StudentFormErrors = {}
@@ -257,12 +257,12 @@ export default function StudentsPage() {
     return (
       <li
         key={student.id}
-        className="flex flex-col gap-3 px-4 py-3 transition-colors hover:bg-[#F6F8FB] dark:hover:bg-white/5 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
+        className="flex flex-col gap-3 px-4 py-3 transition-colors hover:bg-muted dark:hover:bg-white/5 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
       >
         <div className="flex min-w-0 items-center gap-3">
           <span
             aria-hidden="true"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#0B2A55]/10 text-sm font-semibold text-[#0B2A55]"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#0B2A55]/10 text-sm font-semibold text-[#0B2A55] dark:bg-[#7FA0D9]/15 dark:text-[#9DB6E6]"
           >
             {initialsOf(student.name)}
           </span>
@@ -270,7 +270,7 @@ export default function StudentsPage() {
             <div className="flex flex-wrap items-center gap-2">
               <p className="truncate font-medium text-foreground">{student.name}</p>
               {student.batch ? (
-                <span className="rounded-xl border border-[#E6EBF2] px-2 py-0.5 text-xs text-[#0A1F3D]">
+                <span className="rounded-xl border border-border px-2 py-0.5 text-xs text-foreground">
                   {student.batch}
                 </span>
               ) : null}
@@ -369,7 +369,7 @@ export default function StudentsPage() {
     return (
       <ul
         role="list"
-        className={`${cardClass} divide-y divide-[#E6EBF2] overflow-hidden dark:divide-white/10`}
+        className={`${cardClass} divide-y divide-border overflow-hidden dark:divide-white/10`}
       >
         {visibleStudents.map(renderStudentRow)}
       </ul>
@@ -409,7 +409,7 @@ export default function StudentsPage() {
       />
 
       {hydrated ? (
-        <p className="-mt-4 text-sm tabular-nums text-[#5E6E87] dark:text-[#93A3BC]">
+        <p className="-mt-4 text-sm tabular-nums text-muted-foreground dark:text-[#93A3BC]">
           {`${activeCount} active`}
         </p>
       ) : null}

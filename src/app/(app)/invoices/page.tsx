@@ -2,20 +2,31 @@
 
 import { useMemo, useState, useSyncExternalStore } from "react"
 
-import { formatDate, formatINR, formatMonth } from "@/lib/format"
+import { Button } from "@/components/ui/button"
 import { ReminderDialog } from "@/components/reminder-dialog"
 import { RecordPaymentDialog } from "@/components/record-payment-dialog"
+import { formatDate, formatINR, formatMonth } from "@/lib/format"
 import { useStore } from "@/lib/store"
 import type { Invoice } from "@/lib/store"
-import { deriveStatus, isPartPaid, toIsoDate, type DisplayStatus } from "@/lib/invoice-status"
+import {
+  amountDue,
+  deriveStatus,
+  isPartPaid,
+  toIsoDate,
+  type DisplayStatus,
+} from "@/lib/invoice-status"
 
-type Filter = "all" | DisplayStatus
+// "part-paid" is a filter only. It cuts across Due and Overdue.
+type Filter = "all" | DisplayStatus | "part-paid"
+
+type RowItem = { invoice: Invoice; studentName: string; status: DisplayStatus }
 
 const FILTERS: { value: Filter; label: string }[] = [
   { value: "all", label: "All" },
-  { value: "paid", label: "Paid" },
   { value: "due", label: "Due" },
   { value: "overdue", label: "Overdue" },
+  { value: "part-paid", label: "Part paid" },
+  { value: "paid", label: "Paid" },
 ]
 
 const STATUS_LABEL: Record<DisplayStatus, string> = {
@@ -24,21 +35,61 @@ const STATUS_LABEL: Record<DisplayStatus, string> = {
   overdue: "Overdue",
 }
 
-// Colour is a helper only: every badge also carries its text label.
-const BADGE_CLASS: Record<DisplayStatus, string> = {
-  paid: "bg-emerald-100 text-emerald-800 ring-emerald-600/20",
-  due: "bg-amber-100 text-amber-900 ring-amber-600/20",
-  overdue: "bg-red-100 text-red-800 ring-red-600/20",
+// Chip colours. Idle is a soft tint, selected is solid. The label always carries the meaning.
+const CHIP_CLASS: Record<Filter, { idle: string; active: string }> = {
+  all: {
+    idle: "bg-foreground/5 text-foreground hover:bg-foreground/10",
+    active: "bg-foreground text-background",
+  },
+  due: {
+    idle: "bg-[var(--amber)]/15 text-foreground hover:bg-[var(--amber)]/25",
+    active: "bg-[var(--amber)] text-[#1A1206]",
+  },
+  overdue: {
+    idle: "bg-[var(--coral)]/15 text-foreground hover:bg-[var(--coral)]/25",
+    active: "bg-[var(--coral)] text-[#1A1206]",
+  },
+  "part-paid": {
+    idle: "bg-[var(--amber)]/15 text-foreground hover:bg-[var(--amber)]/25",
+    active: "bg-[var(--amber)] text-[#1A1206]",
+  },
+  paid: {
+    idle: "bg-[var(--mint)]/15 text-foreground hover:bg-[var(--mint)]/25",
+    active: "bg-[var(--mint)] text-[#0E1726]",
+  },
 }
 
-// Amber tone for a partly paid invoice. It sits beside the status badge.
-const PART_PAID_CLASS = "bg-amber-100 text-amber-900 ring-amber-600/20"
+// Status pill tints, same palette as the chips.
+const PILL_CLASS: Record<DisplayStatus | "part-paid", string> = {
+  paid: "bg-[var(--mint)]/20 text-foreground",
+  due: "bg-[var(--amber)]/20 text-foreground",
+  overdue: "bg-[var(--coral)]/20 text-foreground",
+  "part-paid": "bg-[var(--amber)]/20 text-foreground",
+}
+
+const amberButtonClass =
+  "bg-[var(--amber)] text-[#1A1206] hover:bg-[var(--amber)]/90 focus-visible:ring-2 focus-visible:ring-[var(--amber)]"
 
 const FOCUS_RING =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
 
 // Subscribed to nothing; used only to detect the client after hydration.
 const subscribeNoop = () => () => {}
+
+function initialsOf(name: string) {
+  return name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join("")
+}
+
+function matchesFilter(invoice: Invoice, status: DisplayStatus, filter: Filter) {
+  if (filter === "all") return true
+  if (filter === "part-paid") return isPartPaid(invoice)
+  return status === filter
+}
 
 export default function InvoicesPage() {
   // Zustand persist reads localStorage on the client only, so the server HTML
@@ -62,6 +113,8 @@ export default function InvoicesPage() {
 
   const today = toIsoDate(new Date())
   const currentMonth = today.slice(0, 7) // "YYYY-MM"
+  // "all" or a "YYYY-MM" month. Starts on the current month.
+  const [month, setMonth] = useState<string>(currentMonth)
 
   const studentNames = useMemo(
     () => new Map(students.map((s) => [s.id, s.name])),
@@ -86,14 +139,36 @@ export default function InvoicesPage() {
     [invoices, studentNames, today],
   )
 
-  const counts = useMemo(() => {
-    const c: Record<Filter, number> = { all: rows.length, paid: 0, due: 0, overdue: 0 }
-    for (const row of rows) c[row.status]++
-    return c
-  }, [rows])
+  // Months that have invoices, plus the current month, newest first.
+  const monthOptions = useMemo(() => {
+    const months = new Set(invoices.map((i) => i.month))
+    months.add(currentMonth)
+    return [...months].sort().reverse()
+  }, [invoices, currentMonth])
 
-  const visibleRows =
-    filter === "all" ? rows : rows.filter((row) => row.status === filter)
+  const monthRows = useMemo(
+    () => (month === "all" ? rows : rows.filter((row) => row.invoice.month === month)),
+    [rows, month],
+  )
+
+  const counts = useMemo(() => {
+    const c: Record<Filter, number> = {
+      all: monthRows.length,
+      paid: 0,
+      due: 0,
+      overdue: 0,
+      "part-paid": 0,
+    }
+    for (const row of monthRows) {
+      c[row.status]++
+      if (isPartPaid(row.invoice)) c["part-paid"]++
+    }
+    return c
+  }, [monthRows])
+
+  const visibleRows = monthRows.filter((row) =>
+    matchesFilter(row.invoice, row.status, filter),
+  )
 
   function handleGenerate() {
     const activeStudents = students.filter((s) => s.active)
@@ -134,23 +209,147 @@ export default function InvoicesPage() {
     )
   }
 
+  function renderInvoiceRow({ invoice, studentName, status }: RowItem) {
+    const monthLabel = formatMonth(invoice.month)
+    const due = amountDue(invoice)
+
+    return (
+      <li
+        key={invoice.id}
+        className="glass flex flex-col gap-3 rounded-2xl p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
+      >
+        <div className="flex min-w-0 items-center gap-3">
+          <span
+            aria-hidden="true"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--amber)]/20 text-sm font-semibold text-foreground"
+          >
+            {initialsOf(studentName)}
+          </span>
+          <div className="min-w-0">
+            <p className="truncate font-medium text-foreground">{studentName}</p>
+            <p className="text-sm text-muted-foreground">{monthLabel}</p>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-3 sm:justify-end">
+          <div>
+            <p className="text-xs text-muted-foreground">Total</p>
+            <p className="tabular-nums text-foreground">{formatINR(invoice.amount)}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Amount due</p>
+            <p
+              className={
+                status === "overdue"
+                  ? "font-medium tabular-nums text-[var(--coral)]"
+                  : "tabular-nums text-foreground"
+              }
+            >
+              {formatINR(due)}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Due date</p>
+            <p className="text-foreground">{formatDate(invoice.dueDate)}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Reminders sent</p>
+            <p className="tabular-nums text-foreground">{invoice.remindersSent}</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span
+              className={`rounded-xl px-2.5 py-1 text-xs font-medium ${PILL_CLASS[status]}`}
+            >
+              {STATUS_LABEL[status]}
+            </span>
+            {status !== "paid" && isPartPaid(invoice) ? (
+              <span
+                className={`rounded-xl px-2.5 py-1 text-xs font-medium ${PILL_CLASS["part-paid"]}`}
+              >
+                Part paid
+              </span>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {status === "overdue" ? (
+            <Button
+              variant="outline"
+              size="sm"
+              aria-label={`Remind ${studentName} about the ${monthLabel} invoice`}
+              onClick={() => setReminderInvoice(invoice)}
+            >
+              Remind
+            </Button>
+          ) : null}
+          {status !== "paid" ? (
+            <Button
+              size="sm"
+              className={amberButtonClass}
+              aria-label={`Record payment for ${studentName}'s ${monthLabel} invoice`}
+              onClick={() => {
+                setPaymentInvoice(invoice)
+                setPaymentOpen(true)
+              }}
+            >
+              Record payment
+            </Button>
+          ) : null}
+        </div>
+      </li>
+    )
+  }
+
+  function renderBody() {
+    if (invoices.length === 0) {
+      return (
+        <div className="glass flex flex-col items-center gap-2 rounded-2xl p-6 text-center">
+          <p className="font-medium text-foreground">No invoices yet.</p>
+          <p className="text-sm text-muted-foreground">
+            Generate this month&apos;s invoices to bill your students from your active students.
+          </p>
+        </div>
+      )
+    }
+
+    if (visibleRows.length === 0) {
+      const text =
+        filter === "all"
+          ? `No invoices for ${formatMonth(month)} yet. Generate this month's invoices to bill your students.`
+          : "No invoices match this filter. Choose All to see every invoice."
+      return <p className="glass rounded-2xl p-6 text-center text-muted-foreground">{text}</p>
+    }
+
+    return (
+      <ul role="list" className="flex flex-col gap-3">
+        {visibleRows.map(renderInvoiceRow)}
+      </ul>
+    )
+  }
+
   if (!mounted) {
-    return <p className="text-sm text-muted-foreground">Loading invoices…</p>
+    return (
+      <p className="glass rounded-2xl p-6 text-center text-muted-foreground">
+        Loading invoices…
+      </p>
+    )
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-          Invoices
-        </h1>
-        <button
-          type="button"
-          onClick={handleGenerate}
-          className={`rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 ${FOCUS_RING}`}
-        >
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="font-display text-2xl font-semibold tracking-tight text-foreground">
+            Invoices
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Bill your students each month and track what is still owed.
+          </p>
+        </div>
+        <Button className={amberButtonClass} onClick={handleGenerate}>
           Generate this month&apos;s invoices
-        </button>
+        </Button>
       </div>
 
       {message && (
@@ -159,106 +358,43 @@ export default function InvoicesPage() {
         </p>
       )}
 
-      <div role="group" aria-label="Filter invoices" className="flex flex-wrap gap-2">
-        {FILTERS.map((f) => {
-          const pressed = filter === f.value
-          return (
-            <button
-              key={f.value}
-              type="button"
-              aria-pressed={pressed}
-              onClick={() => setFilter(f.value)}
-              className={`rounded-md border px-3 py-1.5 text-sm font-medium ${FOCUS_RING} ${
-                pressed
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border bg-card text-foreground hover:bg-muted"
-              }`}
-            >
-              {f.label}{" "}
-              <span className="tabular-nums">({counts[f.value]})</span>
-            </button>
-          )
-        })}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div role="group" aria-label="Filter invoices" className="flex flex-wrap gap-2">
+          {FILTERS.map((f) => {
+            const pressed = filter === f.value
+            return (
+              <button
+                key={f.value}
+                type="button"
+                aria-pressed={pressed}
+                onClick={() => setFilter(f.value)}
+                className={`rounded-xl px-3 py-1.5 text-sm font-medium transition-colors ${FOCUS_RING} ${
+                  pressed ? CHIP_CLASS[f.value].active : CHIP_CLASS[f.value].idle
+                }`}
+              >
+                {f.label}{" "}
+                <span className="tabular-nums">{counts[f.value]}</span>
+              </button>
+            )
+          })}
+        </div>
+
+        <select
+          aria-label="Filter by month"
+          value={month}
+          onChange={(event) => setMonth(event.target.value)}
+          className={`rounded-xl border border-input bg-transparent px-3 py-1.5 text-sm text-foreground ${FOCUS_RING}`}
+        >
+          <option value="all">All months</option>
+          {monthOptions.map((m) => (
+            <option key={m} value={m}>
+              {formatMonth(m)}
+            </option>
+          ))}
+        </select>
       </div>
 
-      {invoices.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          No invoices yet. Use Generate this month&apos;s invoices to create them from your
-          active students.
-        </p>
-      ) : visibleRows.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No {filter} invoices.</p>
-      ) : (
-        <div className="glass overflow-x-auto rounded-2xl">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-muted text-muted-foreground">
-              <tr>
-                <th scope="col" className="px-4 py-3 font-medium">Student</th>
-                <th scope="col" className="px-4 py-3 font-medium">Month</th>
-                <th scope="col" className="px-4 py-3 font-medium">Amount</th>
-                <th scope="col" className="px-4 py-3 font-medium">Due date</th>
-                <th scope="col" className="px-4 py-3 font-medium">Status</th>
-                <th scope="col" className="px-4 py-3 font-medium">
-                  <span className="sr-only">Action</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {visibleRows.map(({ invoice, studentName, status }) => (
-                <tr key={invoice.id}>
-                  <td className="px-4 py-3 text-foreground">{studentName}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{formatMonth(invoice.month)}</td>
-                  <td className="px-4 py-3 tabular-nums text-foreground">
-                    {formatINR(invoice.amount)}
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">{formatDate(invoice.dueDate)}</td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${BADGE_CLASS[status]}`}
-                    >
-                      {STATUS_LABEL[status]}
-                    </span>
-                    {status !== "paid" && isPartPaid(invoice) && (
-                      <span
-                        className={`ml-2 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${PART_PAID_CLASS}`}
-                      >
-                        Part paid
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex flex-wrap justify-end gap-2">
-                      {status === "overdue" && (
-                        <button
-                          type="button"
-                          aria-label={`Send a WhatsApp reminder for ${studentName}'s ${formatMonth(invoice.month)} invoice`}
-                          onClick={() => setReminderInvoice(invoice)}
-                          className={`rounded-md border border-border bg-card px-3 py-1 text-sm font-medium text-foreground hover:bg-muted ${FOCUS_RING}`}
-                        >
-                          Remind
-                        </button>
-                      )}
-                      {status !== "paid" && (
-                        <button
-                          type="button"
-                          aria-label={`Record payment for ${studentName}'s ${formatMonth(invoice.month)} invoice`}
-                          onClick={() => {
-                            setPaymentInvoice(invoice)
-                            setPaymentOpen(true)
-                          }}
-                          className={`rounded-md border border-border bg-card px-3 py-1 text-sm font-medium text-foreground hover:bg-muted ${FOCUS_RING}`}
-                        >
-                          Record payment
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      {renderBody()}
 
       {reminderInvoice && (
         <ReminderDialog

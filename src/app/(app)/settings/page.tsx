@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, type FormEvent } from "react"
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -15,7 +15,15 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { formatINR } from "@/lib/format"
-import { useStore, type Settings } from "@/lib/store"
+import {
+  useStore,
+  type AppState,
+  type AttendanceRecord,
+  type Bill,
+  type Invoice,
+  type Settings,
+  type Student,
+} from "@/lib/store"
 
 type ReminderLanguage = Settings["reminderLanguage"]
 
@@ -218,7 +226,165 @@ function DataSection() {
           }}
         />
       </div>
+      <BackupControls />
     </section>
+  )
+}
+
+// Shape of a backup file after validation. Records are checked as plain objects, not field by field.
+type BackupFile = {
+  students: Record<string, unknown>[]
+  invoices: Record<string, unknown>[]
+  bills: Record<string, unknown>[]
+  settings?: Record<string, unknown>
+  attendance?: Record<string, unknown>[]
+}
+
+const notABackupMessage =
+  "This file is not a FeeFlow backup. It needs students, invoices and bills lists."
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+}
+
+function isRecordList(value: unknown): value is Record<string, unknown>[] {
+  return Array.isArray(value) && value.every(isPlainObject)
+}
+
+function parseBackup(value: unknown): BackupFile | null {
+  if (!isPlainObject(value)) return null
+  const { students, invoices, bills, settings, attendance } = value
+  if (!isRecordList(students) || !isRecordList(invoices) || !isRecordList(bills)) return null
+  if (settings !== undefined && !isPlainObject(settings)) return null
+  if (attendance !== undefined && !isRecordList(attendance)) return null
+  return {
+    students,
+    invoices,
+    bills,
+    settings: isPlainObject(settings) ? settings : undefined,
+    attendance: isRecordList(attendance) ? attendance : undefined,
+  }
+}
+
+// Keys missing from the backup fall back to the store's initial defaults.
+function buildRestoredState(backup: BackupFile): Partial<AppState> {
+  const defaults = useStore.getInitialState()
+  const backupSettings = backup.settings ?? {}
+  return {
+    students: backup.students as Student[],
+    invoices: backup.invoices as Invoice[],
+    bills: backup.bills as Bill[],
+    attendance: (backup.attendance ?? defaults.attendance) as AttendanceRecord[],
+    settings: {
+      ...defaults.settings,
+      ...backupSettings,
+      feeRules: {
+        ...defaults.settings.feeRules,
+        ...((backupSettings.feeRules as Partial<Settings["feeRules"]> | undefined) ?? {}),
+      },
+    } as Settings,
+  }
+}
+
+// Local calendar date as "YYYY-MM-DD" for the backup file name.
+function localDateStamp(date: Date): string {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, "0")
+  const d = String(date.getDate()).padStart(2, "0")
+  return `${y}-${m}-${d}`
+}
+
+function downloadBackup() {
+  const state = useStore.getState()
+  // Keep data only: action functions are dropped so the file is plain JSON.
+  const data = Object.fromEntries(
+    Object.entries(state).filter(([, value]) => typeof value !== "function"),
+  )
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" })
+  const url = URL.createObjectURL(blob)
+  const anchor = document.createElement("a")
+  anchor.href = url
+  anchor.download = `feeflow-backup-${localDateStamp(new Date())}.json`
+  anchor.click()
+  // Revoke on the next tick so the browser has started the download before the URL is released.
+  setTimeout(() => URL.revokeObjectURL(url), 0)
+}
+
+function BackupControls() {
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [pendingBackup, setPendingBackup] = useState<BackupFile | null>(null)
+  const [restoreError, setRestoreError] = useState<string | null>(null)
+
+  async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    // Clear the input so choosing the same file again still fires onChange.
+    event.target.value = ""
+    if (!file) return
+    setRestoreError(null)
+    let backup: BackupFile | null = null
+    try {
+      backup = parseBackup(JSON.parse(await file.text()))
+    } catch {
+      backup = null
+    }
+    if (backup) setPendingBackup(backup)
+    else setRestoreError(notABackupMessage)
+  }
+
+  function handleConfirmRestore() {
+    if (!pendingBackup) return
+    useStore.setState(buildRestoredState(pendingBackup))
+    setPendingBackup(null)
+    toast.success("Backup restored. Your students, invoices and bills are back.")
+  }
+
+  return (
+    <div className="mt-4 flex flex-col gap-3">
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <Button variant="outline" onClick={() => downloadBackup()}>
+          Download backup
+        </Button>
+        <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+          Restore from backup
+        </Button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".json"
+          hidden
+          onChange={handleFileChange}
+        />
+      </div>
+      {restoreError ? (
+        <p role="alert" className="text-sm text-destructive">
+          {restoreError}
+        </p>
+      ) : null}
+      <Dialog
+        open={pendingBackup !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingBackup(null)
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Replace your data with this backup?</DialogTitle>
+            <DialogDescription>
+              Restoring replaces all current students, invoices and bills with the ones in this
+              backup. Your current settings are replaced by the settings saved in the backup.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPendingBackup(null)}>
+              Cancel
+            </Button>
+            <Button className={dangerButtonClass} onClick={handleConfirmRestore}>
+              Replace my data with this backup
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   )
 }
 

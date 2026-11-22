@@ -42,10 +42,17 @@ export type FeeRules = { lateFee: { enabled: boolean; amount: number; afterDays:
 
 export type Settings = {
   tutorName: string
+  phone: string // tutor's own WhatsApp number
+  businessName: string
   upiId: string
   startingCashBalance: number
   onboarded: boolean
   reminderLanguage: "english" | "hinglish"
+  feeDay: number // day of month fees are due (1-28)
+  lateFeeUnit: "flat" | "percent"
+  reminderDays: 3 | 7 | 14 // auto-reminder after this many days late
+  reminderTemplate: string
+  compactMode: boolean
   feeRules: FeeRules
 }
 
@@ -93,10 +100,17 @@ export type AppStore = AppState & AppActions
 
 const defaultSettings: Settings = {
   tutorName: "",
+  phone: "",
+  businessName: "",
   upiId: "",
   startingCashBalance: 0,
   onboarded: false,
   reminderLanguage: "english",
+  feeDay: 5,
+  lateFeeUnit: "flat",
+  reminderDays: 7,
+  reminderTemplate: "Hi {parentName}, a friendly reminder that {amount} for {month} is pending. Thank you!",
+  compactMode: false,
   feeRules: { lateFee: { enabled: false, amount: 100, afterDays: 10 }, siblingDiscount: { enabled: false, percent: 10 } },
 }
 

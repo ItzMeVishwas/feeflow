@@ -6,6 +6,7 @@ import { motion, useReducedMotion } from "framer-motion"
 import { useEffect, useRef, useState } from "react"
 import {
   CalendarCheck,
+  CalendarDays,
   FileText,
   LayoutDashboard,
   Pin,
@@ -33,6 +34,7 @@ const navItems: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Students", href: "/students", icon: Users },
   { label: "Attendance", href: "/attendance", icon: CalendarCheck },
+  { label: "Calendar", href: "/calendar", icon: CalendarDays },
   { label: "Invoices", href: "/invoices", icon: FileText },
   { label: "Bills", href: "/bills", icon: Receipt },
   { label: "Forecast", href: "/forecast", icon: TrendingUp },

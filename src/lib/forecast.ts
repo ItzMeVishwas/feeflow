@@ -8,6 +8,9 @@ export type ForecastScenario = {
   extraExpense?: { amount: number; date: string }
 }
 
+// "due" uses invoice due dates as-is. "realistic" adds the parent's late-payment history and promised dates.
+export type ForecastMode = "due" | "realistic"
+
 export type ForecastEvent = {
   kind: "fee" | "invoice" | "bill" | "expense"
   direction: "in" | "out"
@@ -107,6 +110,7 @@ export function buildForecast(
   days = 90,
   scenario?: ForecastScenario,
   today: string = toIsoDate(new Date()),
+  mode: ForecastMode = "realistic",
 ): ForecastPoint[] {
   const endDate = addDays(today, days - 1)
   const inWindow = (date: string): boolean => date >= today && date <= endDate
@@ -144,7 +148,14 @@ export function buildForecast(
   for (const invoice of state.invoices) {
     if (invoice.status === "paid" || isDropped(invoice.studentId)) continue
     const history = latenessHistory(invoice.studentId, state.invoices)
-    let expected = addDays(invoice.dueDate, roundedAverage(history))
+    let expected: string
+    if (mode === "due") {
+      expected = invoice.dueDate
+    } else if (invoice.promisedDate) {
+      expected = invoice.promisedDate
+    } else {
+      expected = addDays(invoice.dueDate, roundedAverage(history))
+    }
     if (expected < today) {
       expected = history.length > 0 ? today : addDays(today, 7)
     }

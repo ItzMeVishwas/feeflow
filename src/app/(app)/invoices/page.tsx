@@ -73,6 +73,10 @@ const amberButtonClass =
 const FOCUS_RING =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
 
+// Focus ring for the promise controls.
+const OUTLINE_FOCUS =
+  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F2A93B]"
+
 // Subscribed to nothing; used only to detect the client after hydration.
 const subscribeNoop = () => () => {}
 
@@ -103,6 +107,7 @@ export default function InvoicesPage() {
   const students = useStore((s) => s.students)
   const invoices = useStore((s) => s.invoices)
   const addInvoice = useStore((s) => s.addInvoice)
+  const setPromisedDate = useStore((s) => s.setPromisedDate)
   const upiId = useStore((s) => s.settings.upiId)
 
   const [filter, setFilter] = useState<Filter>("all")
@@ -110,6 +115,10 @@ export default function InvoicesPage() {
   const [reminderInvoice, setReminderInvoice] = useState<Invoice | null>(null)
   const [paymentInvoice, setPaymentInvoice] = useState<Invoice | null>(null)
   const [paymentOpen, setPaymentOpen] = useState(false)
+  // The "Promise a date" form is open for at most one invoice at a time.
+  const [promiseInvoiceId, setPromiseInvoiceId] = useState<string | null>(null)
+  const [promiseDraft, setPromiseDraft] = useState("")
+  const [promiseError, setPromiseError] = useState("")
 
   const today = toIsoDate(new Date())
   const currentMonth = today.slice(0, 7) // "YYYY-MM"
@@ -209,14 +218,43 @@ export default function InvoicesPage() {
     )
   }
 
+  function openPromiseForm(invoice: Invoice) {
+    setPromiseInvoiceId(invoice.id)
+    setPromiseDraft(invoice.promisedDate ?? "")
+    setPromiseError("")
+  }
+
+  function closePromiseForm() {
+    setPromiseInvoiceId(null)
+    setPromiseDraft("")
+    setPromiseError("")
+  }
+
+  function savePromise(invoiceId: string) {
+    if (!promiseDraft) {
+      setPromiseError("Pick a date.")
+      return
+    }
+    // ISO dates (YYYY-MM-DD) sort correctly as plain strings.
+    if (promiseDraft < today) {
+      setPromiseError("Pick today or a later date.")
+      return
+    }
+    setPromisedDate(invoiceId, promiseDraft)
+    closePromiseForm()
+  }
+
   function renderInvoiceRow({ invoice, studentName, status }: RowItem) {
     const monthLabel = formatMonth(invoice.month)
     const due = amountDue(invoice)
+    const promiseOpen = promiseInvoiceId === invoice.id
 
     return (
       <li
         key={invoice.id}
-        className="glass flex flex-col gap-3 rounded-2xl p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
+        className={`glass flex flex-col gap-3 rounded-2xl p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4 ${
+          promiseOpen ? "sm:flex-wrap" : ""
+        }`}
       >
         <div className="flex min-w-0 items-center gap-3">
           <span
@@ -269,6 +307,11 @@ export default function InvoicesPage() {
                 Part paid
               </span>
             ) : null}
+            {status !== "paid" && invoice.promisedDate ? (
+              <span className="rounded-xl bg-[#3DD9A8]/15 px-2.5 py-1 text-xs font-medium tabular-nums text-[#3DD9A8]">
+                Promised {formatDate(invoice.promisedDate)}
+              </span>
+            ) : null}
           </div>
         </div>
 
@@ -296,7 +339,67 @@ export default function InvoicesPage() {
               Record payment
             </Button>
           ) : null}
+          {status !== "paid" ? (
+            <Button
+              variant="outline"
+              size="sm"
+              className={OUTLINE_FOCUS}
+              aria-label={`${invoice.promisedDate ? "Change promise" : "Promise a date"} for ${studentName}'s ${monthLabel} invoice`}
+              onClick={() => openPromiseForm(invoice)}
+            >
+              {invoice.promisedDate ? "Change promise" : "Promise a date"}
+            </Button>
+          ) : null}
+          {status !== "paid" && invoice.promisedDate ? (
+            <Button
+              variant="outline"
+              size="sm"
+              className={OUTLINE_FOCUS}
+              aria-label={`Clear promise for ${studentName}'s ${monthLabel} invoice`}
+              onClick={() => setPromisedDate(invoice.id, null)}
+            >
+              Clear promise
+            </Button>
+          ) : null}
         </div>
+        {status !== "paid" && promiseOpen ? (
+          <form
+            onSubmit={(event) => {
+              event.preventDefault()
+              savePromise(invoice.id)
+            }}
+            className="flex w-full flex-wrap items-center gap-2"
+          >
+            <input
+              type="date"
+              aria-label="Promised date"
+              min={today}
+              value={promiseDraft}
+              onChange={(event) => {
+                setPromiseDraft(event.target.value)
+                setPromiseError("")
+              }}
+              className={`rounded-xl border border-input bg-transparent px-3 py-1.5 text-sm text-foreground ${OUTLINE_FOCUS}`}
+            />
+            <Button type="submit" size="sm" className={`${amberButtonClass} ${OUTLINE_FOCUS}`}>
+              Save
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className={OUTLINE_FOCUS}
+              onClick={closePromiseForm}
+            >
+              Cancel
+            </Button>
+            {promiseError ? (
+              <p role="alert" className="w-full text-sm text-[var(--coral)]">
+                {promiseError}
+              </p>
+            ) : null}
+          </form>
+        ) : null}
       </li>
     )
   }

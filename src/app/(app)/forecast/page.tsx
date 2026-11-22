@@ -10,6 +10,7 @@ import {
   buildForecast,
   parentReliability,
   summarizeForecast,
+  type ForecastMode,
   type ForecastScenario,
   type ForecastSummary,
 } from "@/lib/forecast"
@@ -22,6 +23,11 @@ const subscribeNoop = () => () => {}
 type Horizon = 30 | 60 | 90
 const DEFAULT_HORIZON: Horizon = 90
 const MAX_DELAY_DAYS = 60
+
+const BASIS_OPTIONS: { value: ForecastMode; label: string }[] = [
+  { value: "due", label: "Due dates" },
+  { value: "realistic", label: "Realistic" },
+]
 
 const fieldClass =
   "h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 text-base text-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50 dark:bg-input/30 md:text-sm [&>option]:bg-background [&>option]:text-foreground"
@@ -107,6 +113,7 @@ export default function ForecastPage() {
   const [dropStudentId, setDropStudentId] = useState("")
   const [expenseAmount, setExpenseAmount] = useState("")
   const [expenseDate, setExpenseDate] = useState("")
+  const [basis, setBasis] = useState<ForecastMode>("realistic")
 
   const studentNames = useMemo(
     () => new Map<string, string>(students.map((s) => [s.id, s.name])),
@@ -133,12 +140,12 @@ export default function ForecastPage() {
     [students, invoices, bills, settings, attendance],
   )
   const baselineSummary = useMemo(
-    () => summarizeForecast(buildForecast(state, horizon)),
-    [state, horizon],
+    () => summarizeForecast(buildForecast(state, horizon, undefined, undefined, basis)),
+    [state, horizon, basis],
   )
   const withChangesSummary = useMemo(
-    () => summarizeForecast(buildForecast(state, horizon, scenario)),
-    [state, horizon, scenario],
+    () => summarizeForecast(buildForecast(state, horizon, scenario, undefined, basis)),
+    [state, horizon, scenario, basis],
   )
 
   const sentence = comparisonSentence({
@@ -197,6 +204,29 @@ export default function ForecastPage() {
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
         <div className="min-w-0 space-y-3">
+          <div className="space-y-2">
+            <p className="text-sm text-[#9AA8BC]">Forecast basis</p>
+            <div role="group" aria-label="Forecast basis" className="flex flex-wrap gap-2">
+              {BASIS_OPTIONS.map((option) => {
+                const pressed = basis === option.value
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    aria-pressed={pressed}
+                    onClick={() => setBasis(option.value)}
+                    className={`h-10 rounded-xl px-4 text-sm font-medium text-foreground transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F2A93B] ${
+                      pressed
+                        ? "bg-[#F2A93B] text-[#1A1206]"
+                        : "border border-white/15 bg-white/[0.04] hover:bg-white/[0.08]"
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
           <RunwayChart
             scenario={scenario}
             horizon={horizon}

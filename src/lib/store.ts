@@ -26,6 +26,7 @@ export type Invoice = {
   paidDate: string | null
   remindersSent: number
   lastRemindedAt?: string // ISO local date "YYYY-MM-DD" of the last reminder sent
+  promisedDate?: string // ISO date "YYYY-MM-DD" the parent said they will pay on
   payments?: Payment[]
 }
 
@@ -74,6 +75,7 @@ export type AppActions = {
   updateInvoice: (id: string, patch: Partial<Omit<Invoice, "id">>) => void
   removeInvoice: (id: string) => void
   incrementRemindersSent: (id: string) => void
+  setPromisedDate: (invoiceId: string, promisedDate: string | null) => void
   recordPayment: (invoiceId: string, amount: number, date: string) => void
   undoPayment: (invoiceId: string, paymentId: string) => void
 
@@ -171,6 +173,18 @@ export const useStore = create<AppStore>()(
             ),
           }
         }),
+      setPromisedDate: (invoiceId, promisedDate) =>
+        set((state) => ({
+          invoices: state.invoices.map((i): Invoice => {
+            if (i.id !== invoiceId) return i
+            if (promisedDate === null) {
+              const cleared = { ...i }
+              delete cleared.promisedDate
+              return cleared
+            }
+            return { ...i, promisedDate }
+          }),
+        })),
       recordPayment: (invoiceId, amount, date) =>
         set((state) => {
           if (amount <= 0) return state

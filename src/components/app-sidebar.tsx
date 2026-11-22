@@ -21,6 +21,7 @@ import {
 
 import { cn } from "@/lib/utils"
 import { useStore } from "@/lib/store"
+import { Logo, LogoMark } from "@/components/brand/logo"
 
 type NavItem = {
   label: string
@@ -121,15 +122,7 @@ export function AppSidebar() {
       className="glass fixed left-4 top-4 bottom-4 z-30 hidden flex-col items-center gap-4 rounded-2xl py-4 md:flex"
     >
       <div className="flex w-full items-center justify-between px-2">
-        <span aria-hidden="true" className="size-7 shrink-0 rounded-md bg-primary" />
-        <span
-          className={cn(
-            "min-w-0 overflow-hidden font-heading text-lg font-semibold tracking-tight text-foreground whitespace-nowrap transition-opacity",
-            expanded ? "opacity-100" : "opacity-0"
-          )}
-        >
-          FeeFlow
-        </span>
+        {expanded ? <Logo markSize={32} /> : <LogoMark size={32} />}
         <button
           type="button"
           aria-label={pinned ? "Unpin sidebar" : "Pin sidebar open"}

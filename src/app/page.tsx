@@ -1,6 +1,7 @@
 import Link from "next/link";
 import FlowFieldLazy from "@/components/three/flow-field-lazy";
 import { formatINR } from "../lib/format";
+import { Logo } from "@/components/brand/logo";
 
 // Decorative 7x7 pattern for the UPI-style mock. It is NOT a scannable QR code.
 const UPI_PATTERN = [
@@ -24,7 +25,7 @@ export default function LandingPage() {
   return (
     <div className="dark w-full min-h-screen overflow-x-hidden bg-[#0E1726] font-sans text-[#E8EDF5]">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-5 py-6 sm:px-8">
-        <span className="font-display text-xl font-semibold tracking-tight">FeeFlow</span>
+        <Logo />
         <Link
           href="/dashboard"
           className="rounded-xl px-3 py-2 text-sm font-medium text-[#F2A93B] transition-colors hover:bg-white/[0.06]"

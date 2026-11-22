@@ -1,16 +1,24 @@
 "use client"
 
-import { useMemo, useState, useSyncExternalStore } from "react"
+import { useMemo, useState, useSyncExternalStore, type ReactNode } from "react"
+import { useRouter } from "next/navigation"
+import { motion, useReducedMotion } from "motion/react"
 
 import { AnimatedNumber } from "@/components/ui/animated-number"
+import { AssistantCard } from "@/components/assistant-card"
 import { Button } from "@/components/ui/button"
+import { ChaseQueueDialog } from "@/components/chase-queue-dialog"
 import { CollectionsCard } from "@/components/collections-card"
 import { OnTimeRateCard } from "@/components/on-time-rate-card"
+import { OwedHero } from "@/components/dashboard/owed-hero"
 import { Progress } from "@/components/ui/progress"
 import { ReminderDialog } from "@/components/reminder-dialog"
 import { RunwayChart } from "@/components/runway-chart"
+import { StatCard } from "@/components/dashboard/stat-card"
 import { TiltCard } from "@/components/tilt-card"
 import { TodayRail } from "@/components/today-rail"
+import { buildChaseQueue } from "@/lib/chase"
+import { buildForecast, summarizeForecast } from "@/lib/forecast"
 import { formatDate, formatINR } from "@/lib/format"
 import { useStore } from "@/lib/store"
 import type { Invoice, Student } from "@/lib/store"
@@ -39,6 +47,54 @@ const wholeINR = new Intl.NumberFormat("en-IN", {
   maximumFractionDigits: 0,
 })
 const formatWholeINR = (amount: number): string => wholeINR.format(amount)
+
+const FORECAST_DAYS = 90
+const DAY_MS = 86_400_000
+
+// Whole rupees for the stat cards, via the shared formatter.
+const formatRupees = (amount: number): string => formatINR(amount, { wholeRupees: true })
+
+// Parses "YYYY-MM-DD" as UTC so the day count does not shift with the local timezone.
+function parseIsoUtc(iso: string): number {
+  const [y, m, d] = iso.split("-").map(Number)
+  return Date.UTC(y, m - 1, d)
+}
+
+// Whole days from one ISO date to another (negative when `to` is earlier).
+function daysBetweenIso(from: string, to: string): number {
+  return Math.round((parseIsoUtc(to) - parseIsoUtc(from)) / DAY_MS)
+}
+
+function shiftIsoDays(iso: string, days: number): string {
+  return new Date(parseIsoUtc(iso) + days * DAY_MS).toISOString().slice(0, 10)
+}
+
+// Wraps a top-level dashboard block in a short fade-up on first load.
+function Reveal({
+  index,
+  className,
+  children,
+}: {
+  index: number
+  className?: string
+  children: ReactNode
+}) {
+  const reduceMotion = useReducedMotion()
+  return (
+    <motion.div
+      className={className}
+      initial={{ opacity: 0, y: reduceMotion ? 0 : 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{
+        duration: reduceMotion ? 0 : 0.2,
+        ease: "easeOut",
+        delay: reduceMotion ? 0 : index * 0.04,
+      }}
+    >
+      {children}
+    </motion.div>
+  )
+}
 
 // Percentage of total, 0 when total is 0 (avoids divide-by-zero).
 function share(part: number, total: number): number {
@@ -144,7 +200,12 @@ export default function DashboardPage() {
   const students = useStore((s) => s.students)
   const invoices = useStore((s) => s.invoices)
   const upiId = useStore((s) => s.settings.upiId)
+  const settings = useStore((s) => s.settings)
+  const bills = useStore((s) => s.bills)
+  const attendance = useStore((s) => s.attendance)
+  const router = useRouter()
   const [remindInvoiceId, setRemindInvoiceId] = useState<string | null>(null)
+  const [chaseOpen, setChaseOpen] = useState(false)
 
   const today = toIsoDate(new Date())
   const currentMonth = today.slice(0, 7) // "YYYY-MM"
@@ -248,25 +309,106 @@ export default function DashboardPage() {
     [invoices, remindInvoiceId],
   )
 
+  // Owed hero: unpaid and overdue invoices (stored status), plus the oldest days late.
+  const hero = useMemo(() => {
+    let owed = 0
+    let comingThisMonth = 0
+    let oldestDays = 0
+    const parentIds = new Set<string>()
+    for (const inv of invoices) {
+      if (inv.status !== "unpaid" && inv.status !== "overdue") continue
+      owed += inv.amount
+      parentIds.add(inv.studentId)
+      oldestDays = Math.max(oldestDays, Math.max(0, daysBetweenIso(inv.dueDate, today)))
+      if (inv.dueDate.startsWith(currentMonth)) comingThisMonth += inv.amount
+    }
+    return { owed, parents: parentIds.size, oldestDays, comingThisMonth }
+  }, [invoices, today, currentMonth])
+
+  const forecast = useMemo(
+    () =>
+      buildForecast(
+        { students, invoices, bills, settings, attendance },
+        FORECAST_DAYS,
+        undefined,
+        today,
+      ),
+    [students, invoices, bills, settings, attendance, today],
+  )
+  const forecastSummary = useMemo(() => summarizeForecast(forecast), [forecast])
+  const cashToday = forecast[0]?.balance ?? null
+
+  // Safe until = the day before the first day the balance goes below zero.
+  const firstBelowZero = forecastSummary.firstBelowZeroDate
+  const safeUntilIso = firstBelowZero ? shiftIsoDays(firstBelowZero, -1) : null
+  const alreadyBelowZero = safeUntilIso !== null && safeUntilIso < today
+  const safeUntilValue = safeUntilIso && !alreadyBelowZero ? formatDate(safeUntilIso) : "—"
+  const safeUntilDetail = alreadyBelowZero
+    ? "Balance is already below zero"
+    : safeUntilIso
+      ? "Balance stays above zero until this day"
+      : `No shortfall in the next ${FORECAST_DAYS} days`
+
+  const chaseQueue = useMemo(
+    () => buildChaseQueue({ students, invoices, bills, settings, attendance }, today),
+    [students, invoices, bills, settings, attendance, today],
+  )
+
   if (!mounted) {
     return <p className="text-sm text-muted-foreground">Loading dashboard…</p>
   }
 
   return (
     <div className="space-y-8">
+      <Reveal index={0}>
+        <OwedHero
+          owed={hero.owed}
+          parents={hero.parents}
+          oldestDays={hero.oldestDays}
+          onChase={() => setChaseOpen(true)}
+          onSeeForecast={() => router.push("/forecast")}
+        />
+      </Reveal>
+
+      <Reveal index={1}>
+        <AssistantCard />
+      </Reveal>
+
+      <Reveal index={2}>
+        <section aria-label="Cash outlook" className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <StatCard label="Cash today" value={cashToday} format={formatRupees} />
+          <StatCard
+            label="Coming this month"
+            value={hero.comingThisMonth}
+            format={formatRupees}
+          />
+          <div className="rounded-2xl bg-white border border-[#E3E8F0] p-4 shadow-[0_1px_2px_rgba(15,30,60,.06),0_8px_24px_rgba(15,30,60,.06)] dark:bg-[#121E36] dark:border-white/10">
+            <p className="text-sm text-[#5B6B84] dark:text-[#93A3BC] font-medium">Safe until</p>
+            <span className="mt-2 block text-2xl font-extrabold tracking-tight text-[#0F1E3C] dark:text-[#E6ECF5]">
+              {safeUntilValue}
+            </span>
+            <p className="mt-1 text-xs text-[#5B6B84] dark:text-[#93A3BC]">{safeUntilDetail}</p>
+          </div>
+        </section>
+      </Reveal>
+
       <section aria-label="Overview" className="grid items-stretch gap-4 lg:grid-cols-3">
         <div className="h-full space-y-4 lg:col-span-2">
-          <TiltCard className="rounded-3xl">
-            <RunwayChart />
-          </TiltCard>
+          <Reveal index={3}>
+            <TiltCard className="rounded-3xl">
+              <RunwayChart />
+            </TiltCard>
+          </Reveal>
           <div className="grid gap-4 sm:grid-cols-2">
-            <OnTimeRateCard />
+            <Reveal index={4}>
+              <OnTimeRateCard />
+            </Reveal>
             <CollectionsCard />
           </div>
         </div>
-        <div className="h-full">
+        <Reveal index={5} className="h-full">
           <TodayRail />
-        </div>
+        </Reveal>
       </section>
 
       <section aria-label="Summary" className="grid gap-4 md:grid-cols-3">
@@ -388,6 +530,7 @@ export default function DashboardPage() {
         )}
       </section>
 
+      <ChaseQueueDialog open={chaseOpen} onClose={() => setChaseOpen(false)} queue={chaseQueue} />
     </div>
   )
 }

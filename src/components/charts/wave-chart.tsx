@@ -15,6 +15,8 @@ export type WaveSeries = {
   key: string
   label: string
   color: string
+  // Optional area-fill colour; falls back to `color` when omitted.
+  fill?: string
   values: number[]
 }
 
@@ -210,8 +212,8 @@ export function WaveChart({ series, labels, height, zeroLine = false, marker }: 
               {series.map((s, i) => (
                 <g key={s.key}>
                   <linearGradient id={`${uid}-fill-${i}`} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0" stopColor={s.color} stopOpacity={0.35} />
-                    <stop offset="1" stopColor={s.color} stopOpacity={0} />
+                    <stop offset="0" stopColor={s.fill ?? s.color} stopOpacity={0.35} />
+                    <stop offset="1" stopColor={s.fill ?? s.color} stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id={`${uid}-shimmer-${i}`} x1="0" y1="0" x2="1" y2="0">
                     <stop offset="0" stopColor="#ffffff" stopOpacity={0} />

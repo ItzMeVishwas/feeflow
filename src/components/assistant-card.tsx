@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
 import { ChaseQueueDialog } from "@/components/chase-queue-dialog"
-import { AssistantOrbLazy } from "@/components/three/assistant-orb-lazy"
 import { getAdvice } from "@/lib/advisor"
 import { buildChaseQueue } from "@/lib/chase"
 import { toIsoDate } from "@/lib/invoice-status"
@@ -16,16 +15,6 @@ const DISMISS_KEY = "feeflow-assistant-dismissed"
 
 // Subscribed to nothing; used only to detect the client after hydration.
 const subscribeNoop = () => () => {}
-
-function initials(name: string): string {
-  return name
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((word) => word.charAt(0))
-    .join("")
-    .toUpperCase()
-}
 
 // Wraps the key amount in <strong> when it appears in the headline.
 function renderHeadline(headline: string, keyPhrase: Advice["keyPhrase"]) {
@@ -57,7 +46,6 @@ export function AssistantCard() {
   const attendance = useStore((s) => s.attendance)
   const [chaseOpen, setChaseOpen] = useState(false)
   const [dismissed, setDismissed] = useState(false)
-  const [hovered, setHovered] = useState(false)
 
   const today = toIsoDate(new Date())
 
@@ -69,11 +57,6 @@ export function AssistantCard() {
   const chaseQueue = useMemo(
     () => buildChaseQueue({ students, invoices, bills, settings, attendance }, today),
     [students, invoices, bills, settings, attendance, today],
-  )
-
-  const relatedStudents = useMemo(
-    () => students.filter((s) => advice.relatedStudentIds.includes(s.id)),
-    [students, advice.relatedStudentIds],
   )
 
   // Read the dismissal after mount so the server and first client render match.
@@ -101,54 +84,45 @@ export function AssistantCard() {
 
   if (!mounted || dismissed) return null
 
+  const actionLabel =
+    advice.action === "chaseAll"
+      ? "Chase them now"
+      : advice.action === "openForecast"
+        ? "See forecast"
+        : advice.actionLabel
+
   return (
     <section
       aria-labelledby="assistant-card-heading"
-      className="glass-strong rounded-2xl p-5"
-      onPointerEnter={() => setHovered(true)}
-      onPointerLeave={() => setHovered(false)}
+      className="rounded-2xl bg-white border border-[#E3E8F0] p-5 shadow-[0_1px_2px_rgba(15,30,60,.06),0_8px_24px_rgba(15,30,60,.06)]"
     >
-      <div className="flex items-center gap-3">
-        <div className="relative size-20 shrink-0" aria-hidden="true">
-          <AssistantOrbLazy active={hovered} />
-        </div>
-        <h2
-          id="assistant-card-heading"
-          className="font-heading text-base font-semibold text-foreground"
-        >
-          FeeFlow Assistant
-        </h2>
-      </div>
+      <h2
+        id="assistant-card-heading"
+        className="text-sm font-semibold text-[#5B6B84]"
+      >
+        Your next step
+      </h2>
 
-      <p className="mt-4 font-heading text-xl font-semibold tracking-tight tabular-nums text-foreground sm:text-2xl">
+      <p className="mt-3 text-base leading-relaxed text-[#0F1E3C]">
         {renderHeadline(advice.headline, advice.keyPhrase)}
       </p>
-      <p className="mt-2 text-sm text-muted-foreground">{advice.detail}</p>
 
-      {relatedStudents.length > 0 && (
-        <ul className="mt-4 flex flex-wrap gap-2" aria-label="Students involved">
-          {relatedStudents.map((student) => (
-            <li
-              key={student.id}
-              className="rounded-xl bg-muted px-2 py-1 text-xs font-medium text-foreground"
-            >
-              <span aria-hidden="true">{initials(student.name)}</span>
-              <span className="sr-only">{student.name}</span>
-            </li>
-          ))}
-        </ul>
+      {advice.action !== "none" && (
+        <Button
+          type="button"
+          className="mt-5 h-11 w-full rounded-xl bg-[#1E3A6E] font-semibold text-white hover:bg-[#1E3A6E]/90"
+          onClick={handleAction}
+        >
+          {actionLabel}
+        </Button>
       )}
 
-      <div className="mt-5 flex flex-col gap-2 sm:flex-row">
-        {advice.action !== "none" && (
-          <Button type="button" className="w-full sm:w-auto" onClick={handleAction}>
-            {advice.actionLabel}
-          </Button>
-        )}
+      <div className="mt-3 flex justify-center">
         <Button
           type="button"
           variant="ghost"
-          className="w-full sm:w-auto"
+          size="sm"
+          className="text-[#5B6B84]"
           onClick={handleDismiss}
         >
           Dismiss

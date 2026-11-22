@@ -24,8 +24,10 @@ type Horizon = 30 | 60 | 90;
 const HORIZONS: Horizon[] = [30, 60, 90];
 
 // WaveChart sets colours as SVG attributes, which cannot read CSS variables,
-// so these are hex values. AMBER matches the --amber theme variable.
-const AMBER = "#F2A93B";
+// so these are hex values. NAVY is the balance line; WaveChart derives its area
+// fill from this same colour, so the fill is navy-tinted. The zero-line region
+// below zero uses var(--coral) inside WaveChart.
+const NAVY = "#1E3A6E";
 const BASELINE = "#94A3B8";
 
 // Parse "YYYY-MM-DD" as a local date to avoid UTC shifting the day.
@@ -85,7 +87,8 @@ export function RunwayChart({
     series.push({
       key: "balance",
       label: "Balance",
-      color: AMBER,
+      color: NAVY,
+      fill: "#7DD9CC",
       values: points.map((p) => p.balance),
     });
     return series;

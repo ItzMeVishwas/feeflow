@@ -14,13 +14,16 @@ export function LiveDemo() {
     [lateDays, studentLeaves],
   );
 
-  const lowestText = (
-    <>
-      <span className="font-heading font-semibold tabular-nums">{formatINR(lowest.value)}</span>
-      {" on day "}
-      {lowest.day}
-    </>
-  );
+  const isNegative = lowest.value < 0;
+  const waveColor = isNegative ? "#FF6B6B" : "#3DD9A8";
+
+  let sentence = `Lowest balance ${formatINR(lowest.value)} on day ${lowest.day}.`;
+  if (isNegative) {
+    sentence += ` You'd be short by ${formatINR(-lowest.value)}. FeeFlow warns you weeks ahead.`;
+  }
+  if (studentLeaves) {
+    sentence += ` ${leaverNote}`;
+  }
 
   return (
     <section id="try" className="scroll-mt-24 mx-auto max-w-5xl px-5 py-20 sm:px-8">
@@ -63,7 +66,7 @@ export function LiveDemo() {
 
         <div className="mt-6">
           <WaveChart
-            series={[{ key: "balance", label: "Balance", color: "#3DD9A8", values }]}
+            series={[{ key: "balance", label: "Balance", color: waveColor, values }]}
             labels={labels}
             height={220}
             zeroLine
@@ -71,14 +74,7 @@ export function LiveDemo() {
         </div>
 
         <p aria-live="polite" className="mt-6 text-base">
-          {lateDays === 0 && !studentLeaves ? (
-            <>On time, your lowest balance is {lowestText}.</>
-          ) : (
-            <>
-              If this parent pays {lateDays} days late, your lowest balance is {lowestText}.
-              {studentLeaves && ` ${leaverNote}`}
-            </>
-          )}
+          {sentence}
         </p>
         <p className="mt-2 text-sm text-[#9AA8BC]">Sample data for illustration.</p>
       </div>

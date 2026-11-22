@@ -1,4 +1,5 @@
 import Link from "next/link";
+import FlowFieldLazy from "@/components/three/flow-field-lazy";
 import { formatINR } from "../lib/format";
 
 // Decorative 7x7 pattern for the UPI-style mock. It is NOT a scannable QR code.
@@ -18,6 +19,7 @@ const qrCells = UPI_PATTERN.flatMap((row, r) =>
 
 const runwayTicks = ["Today", "Day 45", "Day 90"];
 
+
 export default function LandingPage() {
   return (
     <div className="dark w-full min-h-screen overflow-x-hidden bg-[#0E1726] font-sans text-[#E8EDF5]">
@@ -33,14 +35,10 @@ export default function LandingPage() {
 
       {/* Hero */}
       <section className="relative isolate overflow-hidden">
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
-          <div className="aurora-blob absolute -left-28 -top-28 h-[24rem] w-[24rem] rounded-full bg-[#F2A93B]/30 blur-3xl md:h-[36rem] md:w-[36rem]" />
-          <div className="aurora-blob aurora-blob-delayed absolute -right-24 top-[18%] h-[22rem] w-[22rem] rounded-full bg-[#2A1F3D] blur-3xl md:h-[34rem] md:w-[34rem]" />
-          <div className="aurora-blob aurora-blob-slow absolute bottom-[-6rem] left-[28%] h-[20rem] w-[20rem] rounded-full bg-[#3DD9A8]/20 blur-3xl md:h-[28rem] md:w-[28rem]" />
-        </div>
+        <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden="true"><FlowFieldLazy /></div>
 
         <div className="mx-auto grid max-w-6xl items-center gap-14 px-5 pb-20 pt-10 sm:px-8 md:grid-cols-2 md:pb-28 md:pt-16 lg:gap-20">
-          <div className="flex flex-col items-start gap-6">
+          <div className="relative z-10 flex flex-col items-start gap-6">
             <p className="rounded-xl border border-white/10 bg-white/[0.06] px-3 py-1.5 text-sm font-medium text-[#F2A93B]">
               For home tutors in India
             </p>

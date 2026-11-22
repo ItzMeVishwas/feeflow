@@ -1,0 +1,97 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]: FeeFlow
+      - link "Open the demo" [ref=e5] [cursor=pointer]:
+        - /url: /dashboard
+    - generic [ref=e7]:
+      - generic [ref=e8]:
+        - paragraph [ref=e9]: For home tutors in India
+        - heading "Know who owes you. See next month's cash. Chase fees in one tap." [level=1] [ref=e10]
+        - paragraph [ref=e11]: FeeFlow sends WhatsApp reminders, creates UPI pay links for each student, and shows a 90-day cash forecast so you can plan the month before it starts.
+        - generic [ref=e12]:
+          - link "Try the live demo" [ref=e13] [cursor=pointer]:
+            - /url: /dashboard
+          - link "See how it works" [ref=e14] [cursor=pointer]:
+            - /url: "#how-it-works"
+      - generic [ref=e16]:
+        - generic [ref=e17]:
+          - paragraph [ref=e18]: Cash runway
+          - paragraph [ref=e19]: Next 90 days
+        - generic [ref=e20]:
+          - img "Cash runway falling over the next 90 days" [ref=e21]
+          - generic [ref=e29]:
+            - generic [ref=e30]: Today
+            - generic [ref=e31]: Day 45
+            - generic [ref=e32]: Day 90
+        - generic [ref=e33]:
+          - generic [ref=e34]:
+            - generic [aria-hidden] [ref=e35]: RM
+            - generic [ref=e36]:
+              - paragraph [ref=e37]: Rohan Mehta
+              - paragraph [ref=e38]: Class 9, maths
+          - generic [ref=e39]:
+            - paragraph [ref=e40]: ₹4,200
+            - paragraph [ref=e41]: due today
+        - generic [ref=e42]:
+          - paragraph [ref=e43]: Collected this month
+          - paragraph [ref=e44]: ₹18,600
+    - generic [ref=e45]:
+      - generic [ref=e46]:
+        - heading "How FeeFlow keeps fees moving" [level=2] [ref=e47]
+        - paragraph [ref=e48]: Three things a tutor needs every week, shown the way they appear in the app.
+      - generic [ref=e49]:
+        - article [ref=e50]:
+          - generic [ref=e51]:
+            - heading "Chase without the awkwardness" [level=3] [ref=e52]
+            - paragraph [ref=e53]: A polite WhatsApp reminder goes out with the pay link already attached.
+          - generic [ref=e54]:
+            - generic [ref=e55]:
+              - text: Hi Sunita, the fee of ₹4,200 for Rohan is due on 5 May. You can pay in one tap here.
+              - generic [ref=e56]: 9:05 am
+            - generic [ref=e57]:
+              - generic [ref=e58]:
+                - paragraph [ref=e59]: UPI pay link
+                - paragraph [ref=e60]: ₹4,200 to your UPI ID
+              - generic [ref=e61]: Ready to share
+        - article [ref=e62]:
+          - generic [ref=e63]:
+            - heading "See the dip before it happens" [level=3] [ref=e64]
+            - paragraph [ref=e65]: The forecast projects your balance day by day, so a shortfall shows up weeks early.
+          - img "Forecast balance dipping below zero in late May" [ref=e67]:
+            - generic [ref=e68]: Zero
+          - paragraph [ref=e72]: Cash goes negative on 18 May
+        - article [ref=e73]:
+          - generic [ref=e74]:
+            - heading "Parents pay in one tap" [level=3] [ref=e75]
+            - paragraph [ref=e76]: The pay link opens straight into any UPI app with the amount filled in.
+          - generic [ref=e77]:
+            - paragraph [ref=e128]: Decorative pattern, not a real QR code.
+            - button "Pay with UPI" [ref=e129]
+    - generic [ref=e130]:
+      - heading "Simple pricing that grows with you" [level=2] [ref=e132]
+      - generic [ref=e133]:
+        - article [ref=e134]:
+          - generic [ref=e135]:
+            - heading "Free" [level=3] [ref=e136]
+            - paragraph [ref=e137]: ₹0 to start
+          - list [ref=e138]:
+            - listitem [ref=e139]: Up to 15 students
+          - link "Start free" [ref=e141] [cursor=pointer]:
+            - /url: /dashboard
+        - article [ref=e142]:
+          - generic [ref=e143]:
+            - generic [ref=e144]:
+              - heading "Pro" [level=3] [ref=e145]
+              - paragraph [ref=e146]: ₹199 per month
+            - generic [ref=e147]: Recommended
+          - list [ref=e148]:
+            - listitem [ref=e149]: Unlimited students
+            - listitem [ref=e151]: Receipts for every payment
+            - listitem [ref=e153]: 90-day cash forecasts
+            - listitem [ref=e155]: Priority support
+          - link "Go Pro" [ref=e157] [cursor=pointer]:
+            - /url: /dashboard
+    - contentinfo [ref=e158]: Built for the Codebenders ACE Builders Hackathon 2026
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e164] [cursor=pointer]

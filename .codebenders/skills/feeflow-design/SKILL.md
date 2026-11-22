@@ -5,32 +5,19 @@ description: FeeFlow glass design system. Use for any UI, styling, layout or com
 
 FeeFlow is a fee + cash-flow back office for Indian home tutors. Follow this design system for all UI work.
 
-THEMES (next-themes, class strategy, toggle in top bar)
-- Dark "evening study": page bg ink #0E1726 with blurred radial glows of plum #2A1F3D and lamp amber #F2A93B (low opacity) fixed behind content.
-- Light "morning mist": page bg #EEF3F6 with soft blurred mint and sky glows.
-- Text: dark mode #E8EDF5 / muted #9AA8BC. Light mode #142033 / muted #5B6B82.
+THEMES: Light is the default. Light: page #EEF2F7, cards #FFFFFF, ink #0F1E3C, muted #5B6B84. Dark is an option with navy tones: page #0B1426, surface #121E36, ink #E6ECF5, muted #93A3BC. No plum or lamp-amber glows. Calm and flat, not decorative.
 
-COLOURS
-- Primary action: amber #F2A93B (text on it #1A1206).
-- Paid / positive: mint #3DD9A8. Overdue / danger: coral #FF6B6B. Due soon: amber.
-- Expose all as CSS variables in globals.css and map to shadcn tokens.
+COLOURS: primary navy #1E3A6E for links, focus and selected states. CTA mint #7DD9CC with navy text for main calls to action. Amber #F2A93B only for warnings and due-soon. Coral #E5484D for overdue and danger. Mint is also paid or positive. Expose as CSS variables.
 
-GLASS
-- .glass utility: translucent bg (dark: rgba(255,255,255,0.06), light: rgba(255,255,255,0.55)), backdrop-blur-xl, 1px border (dark: white/10, light: white/70), subtle inner highlight on top edge.
-- Radius by hierarchy: hero panels rounded-3xl, normal cards rounded-2xl, chips and inputs rounded-xl. Do not give everything the same radius or the same shadow.
+GLASS: Light mode has no blur. Cards are solid white with a 1px #E3E8F0 border and shadow 0 1px 2px rgba(15,30,60,.06), 0 8px 24px rgba(15,30,60,.06). Radius 24px on cards. Dark may keep a subtle blur.
 
-TYPE
-- Bricolage Grotesque (next/font/google) for headings and big rupee figures. Figtree for body and UI.
-- Money always uses tabular-nums and Indian grouping via formatINR in src/lib/format.ts.
-- Sentence case everywhere. No ALL-CAPS labels, no monospace labels, no middle-dot meta strings, no arrow characters in buttons.
+TYPE: Plus Jakarta Sans for everything: 700 and 800 for headings with tight tracking, 400 to 600 for body. Money uses tabular-nums and formatINR. Sentence case; no ALL-CAPS, no monospace, no middle dots, no arrows in buttons.
 
 LAYOUT
 - Floating glass sidebar on desktop, sheet on mobile. Top bar: greeting by time of day (Good morning/afternoon/evening, {tutorName}), date, Ctrl+K search button, theme toggle.
 - Size cards by importance: one hero per page, supporting cards smaller. Avoid grids of identical cards.
 
-MOTION (framer-motion)
-- One orchestrated moment per page at most (e.g. hero chart line drawing in). Otherwise motion only on user action: dialog open, row expand, button press, hover lift of y:-2 on clickable cards.
-- No fade-up on every section. Respect prefers-reduced-motion.
+MOTION: One page-level fade and rise (8px, 200ms, ease out) via the app template. The sidebar active item uses a sliding pill (layoutId). Buttons press to 0.98 scale. Everything respects prefers-reduced-motion. No scroll-triggered fades, no decorative motion.
 
 COPY
 - Plain, active, specific to tutors and parents. Buttons say exactly what happens: "Send on WhatsApp", "Mark as paid". Empty states tell the user what to do next.

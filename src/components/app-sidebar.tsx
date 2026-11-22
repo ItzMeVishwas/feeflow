@@ -167,14 +167,22 @@ export function AppSidebar() {
                   className={cn(
                     "group relative flex h-11 w-full items-center gap-3 rounded-xl px-2.5 text-sm font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
                     isActive
-                      ? "bg-primary text-primary-foreground shadow-[0_0_20px_-4px_rgba(242,169,59,0.55)]"
+                      ? "text-foreground"
                       : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   )}
                 >
-                  <Icon className="size-5 shrink-0" aria-hidden="true" />
+                  {isActive && (
+                    <motion.span
+                      layoutId="nav-pill-desktop"
+                      className="absolute inset-0 -z-0 rounded-xl bg-[#1E3A6E]/10 dark:bg-white/10"
+                      aria-hidden="true"
+                      transition={{ duration: reduce ? 0 : 0.2 }}
+                    />
+                  )}
+                  <Icon className="relative z-10 size-5 shrink-0" aria-hidden="true" />
                   <span
                     className={cn(
-                      "whitespace-nowrap text-sm transition-opacity",
+                      "relative z-10 whitespace-nowrap text-sm transition-opacity",
                       expanded ? "opacity-100" : "opacity-0"
                     )}
                   >
@@ -189,6 +197,7 @@ export function AppSidebar() {
                     </span>
                   )}
                 </Link>
+
               </li>
             )
           })}
@@ -254,6 +263,7 @@ export function AppSidebar() {
 
 export function AppMobileNav() {
   const pathname = usePathname()
+  const reduce = useReducedMotion()
   const [moreOpen, setMoreOpen] = useState(false)
   const moreActive = moreNavItems.some((item) =>
     isActivePath(pathname, item.href)
@@ -275,14 +285,22 @@ export function AppMobileNav() {
                   href={item.href}
                   aria-current={isActive ? "page" : undefined}
                   className={cn(
-                    "flex min-h-11 w-full flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-[11px] font-medium transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F2A93B]",
+                    "relative flex min-h-11 w-full flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-[11px] font-medium transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F2A93B]",
                     isActive
-                      ? "bg-primary text-primary-foreground"
+                      ? "text-foreground"
                       : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   )}
                 >
-                  <Icon className="size-5 shrink-0" aria-hidden="true" />
-                  <span className="max-w-full truncate">{item.label}</span>
+                  {isActive && (
+                    <motion.span
+                      layoutId="nav-pill-mobile"
+                      className="absolute inset-0 -z-0 rounded-xl bg-[#1E3A6E]/10 dark:bg-white/10"
+                      aria-hidden="true"
+                      transition={{ duration: reduce ? 0 : 0.2 }}
+                    />
+                  )}
+                  <Icon className="relative z-10 size-5 shrink-0" aria-hidden="true" />
+                  <span className="relative z-10 max-w-full truncate">{item.label}</span>
                 </Link>
               </li>
             )

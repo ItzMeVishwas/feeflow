@@ -10,16 +10,16 @@ export type PayLinkData = {
   invoiceId: string
 }
 
-// Encodes as base64url so the value is safe in a URL query string.
-export function encodePayLink(data: PayLinkData): string {
-  const bytes = new TextEncoder().encode(JSON.stringify(data))
+// Encodes any JSON-safe value as base64url so it is safe in a URL query string.
+export function encodeBase64UrlJson(value: unknown): string {
+  const bytes = new TextEncoder().encode(JSON.stringify(value))
   let binary = ""
   for (const byte of bytes) binary += String.fromCharCode(byte)
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "")
 }
 
-// Returns null for any malformed input. Never throws.
-export function decodePayLink(param: string): PayLinkData | null {
+// Returns null for any malformed input (including the JSON value null). Never throws.
+export function decodeBase64UrlJson(param: string): unknown {
   try {
     let base64 = param.replace(/-/g, "+").replace(/_/g, "/")
     const padding = base64.length % 4
@@ -27,24 +27,32 @@ export function decodePayLink(param: string): PayLinkData | null {
 
     const binary = atob(base64)
     const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0))
-    const json: unknown = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes))
-
-    if (typeof json !== "object" || json === null) return null
-    const d = json as Record<string, unknown>
-
-    const strings = ["tutorName", "upiId", "studentName", "parentName", "month", "dueDate", "invoiceId"] as const
-    for (const key of strings) {
-      if (typeof d[key] !== "string") return null
-    }
-    const numbers = ["amount", "amountDue"] as const
-    for (const key of numbers) {
-      if (typeof d[key] !== "number" || !Number.isFinite(d[key])) return null
-    }
-
-    return d as unknown as PayLinkData
+    return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes))
   } catch {
     return null
   }
+}
+
+export function encodePayLink(data: PayLinkData): string {
+  return encodeBase64UrlJson(data)
+}
+
+// Returns null for any malformed input. Never throws.
+export function decodePayLink(param: string): PayLinkData | null {
+  const json = decodeBase64UrlJson(param)
+  if (typeof json !== "object" || json === null) return null
+  const d = json as Record<string, unknown>
+
+  const strings = ["tutorName", "upiId", "studentName", "parentName", "month", "dueDate", "invoiceId"] as const
+  for (const key of strings) {
+    if (typeof d[key] !== "string") return null
+  }
+  const numbers = ["amount", "amountDue"] as const
+  for (const key of numbers) {
+    if (typeof d[key] !== "number" || !Number.isFinite(d[key])) return null
+  }
+
+  return d as unknown as PayLinkData
 }
 
 export function buildPayUrl(data: PayLinkData): string {

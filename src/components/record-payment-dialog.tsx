@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label"
 import { SuccessBurst } from "@/components/ui/success-burst"
 import { formatINR, formatMonth } from "@/lib/format"
 import { amountDue, toIsoDate } from "@/lib/invoice-status"
+import { buildReceiptPath, receiptNumber, type ReceiptData } from "@/lib/receipt-link"
 import { useStore } from "@/lib/store"
 import type { Invoice, Student } from "@/lib/store"
 
@@ -34,7 +35,7 @@ type RecordPaymentBodyProps = {
   onDone: () => void
 }
 
-type Recorded = { amount: number; remaining: number }
+type Recorded = { amount: number; remaining: number; receipt: ReceiptData }
 
 // WhatsApp needs digits only. A 10-digit Indian number gets the 91 country code.
 function toWhatsAppDigits(phone: string): string {
@@ -82,6 +83,7 @@ export function RecordPaymentDialog({
 function RecordPaymentBody({ invoice, student, tutorName, onDone }: RecordPaymentBodyProps) {
   const recordPayment = useStore((s) => s.recordPayment)
   const undoPayment = useStore((s) => s.undoPayment)
+  const upiId = useStore((s) => s.settings.upiId)
 
   const due = amountDue(invoice)
   const [amountText, setAmountText] = useState(String(due))
@@ -122,23 +124,33 @@ function RecordPaymentBody({ invoice, student, tutorName, onDone }: RecordPaymen
         : undefined,
     })
 
-    setRecorded({ amount, remaining })
+    setRecorded({
+      amount,
+      remaining,
+      receipt: {
+        no: receiptNumber(invoice.id, invoice.month),
+        student: student.name,
+        parent: student.parentName,
+        amount,
+        month: invoice.month,
+        date,
+        tutor: tutorName,
+        upiId,
+      },
+    })
   }
 
-  function handleSendReceipt(result: Recorded) {
-    const lines = [
-      `Thank you. We received ${formatINR(result.amount)} for ${student.name}'s ${formatMonth(invoice.month)} fees.` +
-        (result.remaining > 0 ? ` ${formatINR(result.remaining)} is still due.` : ""),
-    ]
-    const sign = tutorName.trim()
-    if (sign) lines.push(sign)
-
+  // Read the origin at click time so the receipt link matches the host the app runs on.
+  function handleSendOnWhatsApp(result: Recorded) {
     const digits = toWhatsAppDigits(student.parentPhone)
-    const url = `https://wa.me/${digits}?text=${encodeURIComponent(lines.join("\n"))}`
-    window.open(url, "_blank", "noopener,noreferrer")
+    if (!digits) return
+    const link = `${window.location.origin}${buildReceiptPath(result.receipt)}`
+    const message = `Hi ${student.parentName}, we received ${formatINR(result.amount)} for ${formatMonth(invoice.month)}. Receipt: ${link}. Thank you!`
+    window.open(`https://wa.me/${digits}?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer")
   }
 
   if (recorded) {
+    const canWhatsApp = toWhatsAppDigits(student.parentPhone).length > 0
     return (
       <>
         <div className="relative mb-2 h-12 w-12">
@@ -155,10 +167,29 @@ function RecordPaymentBody({ invoice, student, tutorName, onDone }: RecordPaymen
             <span className="tabular-nums">{formatINR(recorded.remaining)}</span> still due
           </p>
         )}
+        <div className="space-y-3 rounded-xl border border-[#E6EBF2] p-4">
+          <p className="text-sm font-medium text-foreground">Send receipt</p>
+          <button
+            type="button"
+            onClick={() => handleSendOnWhatsApp(recorded)}
+            disabled={!canWhatsApp}
+            className="flex h-11 w-full items-center justify-center rounded-xl bg-[#0B2A55] px-4 text-sm font-semibold text-white hover:bg-[#133A72] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B2A55] disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Send on WhatsApp
+          </button>
+          {!canWhatsApp && (
+            <p className="text-xs text-[#5E6E87]">Add a phone number to send on WhatsApp</p>
+          )}
+          <a
+            href={buildReceiptPath(recorded.receipt)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex h-11 w-full items-center justify-center rounded-xl border border-[#DCE3EE] bg-white px-4 text-sm font-medium text-[#0B2A55] hover:bg-[#F6F8FB] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B2A55]"
+          >
+            Open receipt
+          </a>
+        </div>
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => handleSendReceipt(recorded)}>
-            Send receipt on WhatsApp
-          </Button>
           <Button type="button" onClick={onDone}>
             Done
           </Button>

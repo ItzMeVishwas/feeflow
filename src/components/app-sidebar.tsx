@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation"
 import { motion, useReducedMotion } from "framer-motion"
 import { useEffect, useRef, useState } from "react"
 import {
+  BarChart3,
   CalendarCheck,
   CalendarDays,
   FileText,
@@ -46,6 +47,7 @@ const navItems: NavItem[] = [
   { label: "Bills", href: "/bills", icon: Receipt },
   { label: "Forecast", href: "/forecast", icon: TrendingUp },
   { label: "Insights", href: "/insights", icon: Sparkles },
+  { label: "Report", href: "/report", icon: BarChart3 },
 ]
 
 // Phone bottom bar: four main tabs plus a "More" button that opens a sheet
@@ -63,6 +65,7 @@ const moreNavItems: NavItem[] = [
   { label: "Bills", href: "/bills", icon: Receipt },
   { label: "Forecast", href: "/forecast", icon: TrendingUp },
   { label: "Insights", href: "/insights", icon: Sparkles },
+  { label: "Report", href: "/report", icon: BarChart3 },
   { label: "Settings", href: "/settings", icon: Settings },
 ]
 

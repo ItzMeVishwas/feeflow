@@ -12,6 +12,7 @@ import {
   PinOff,
   Receipt,
   Settings,
+  Sparkles,
   TrendingUp,
   User,
   Users,
@@ -34,6 +35,7 @@ const navItems: NavItem[] = [
   { label: "Invoices", href: "/invoices", icon: FileText },
   { label: "Bills", href: "/bills", icon: Receipt },
   { label: "Forecast", href: "/forecast", icon: TrendingUp },
+  { label: "Insights", href: "/insights", icon: Sparkles },
 ]
 
 // Bills is desktop-only. The bottom bar shows six items (grid-cols-6), and
@@ -44,6 +46,7 @@ const mobileNavItems: NavItem[] = [
   { label: "Attendance", href: "/attendance", icon: CalendarCheck },
   { label: "Invoices", href: "/invoices", icon: FileText },
   { label: "Forecast", href: "/forecast", icon: TrendingUp },
+  { label: "Insights", href: "/insights", icon: Sparkles },
   { label: "Settings", href: "/settings", icon: Settings },
 ]
 
@@ -248,7 +251,7 @@ export function AppMobileNav() {
       aria-label="Main"
       className="glass fixed inset-x-4 bottom-4 z-40 rounded-2xl p-2 md:hidden"
     >
-      <ul className="grid grid-cols-6 gap-1">
+      <ul className="grid grid-cols-7 gap-1">
         {mobileNavItems.map((item) => {
           const Icon = item.icon
           const isActive = isActivePath(pathname, item.href)

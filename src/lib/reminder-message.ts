@@ -48,6 +48,8 @@ export type DraftInput = {
   amountDue: number
   daysLate: number
   payUrl: string
+  // Pass only when the late fee rule is enabled; null/undefined adds no line.
+  lateFee?: { amount: number; afterDays: number } | null
 }
 
 export function buildDraft({
@@ -59,6 +61,7 @@ export function buildDraft({
   amountDue,
   daysLate,
   payUrl,
+  lateFee,
 }: DraftInput): string {
   const parent = parentName.trim() || "Parent"
   const monthText = formatMonth(month)
@@ -87,6 +90,9 @@ export function buildDraft({
   }
 
   const lines = [body]
+  if (lateFee && daysLate > lateFee.afterDays) {
+    lines.push(`Late fee: ${formatINR(lateFee.amount)} will be added after ${lateFee.afterDays} days.`)
+  }
   if (payUrl) {
     lines.push(`Pay here in one tap: ${payUrl}`)
   }

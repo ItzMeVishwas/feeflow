@@ -37,12 +37,15 @@ export type Bill = {
   recurringMonthly: boolean
 }
 
+export type FeeRules = { lateFee: { enabled: boolean; amount: number; afterDays: number }; siblingDiscount: { enabled: boolean; percent: number } };
+
 export type Settings = {
   tutorName: string
   upiId: string
   startingCashBalance: number
   onboarded: boolean
   reminderLanguage: "english" | "hinglish"
+  feeRules: FeeRules
 }
 
 export type AttendanceRecord = {
@@ -92,6 +95,7 @@ const defaultSettings: Settings = {
   startingCashBalance: 0,
   onboarded: false,
   reminderLanguage: "english",
+  feeRules: { lateFee: { enabled: false, amount: 100, afterDays: 10 }, siblingDiscount: { enabled: false, percent: 10 } },
 }
 
 // Local calendar date as "YYYY-MM-DD" (not UTC, so it matches the user's day).
@@ -224,6 +228,19 @@ export const useStore = create<AppStore>()(
     {
       name: "feeflow-store",
       storage: createJSONStorage(() => localStorage),
+      // Old persisted settings have no feeRules; fill them from the defaults.
+      merge: (persistedState, currentState) => {
+        const p = persistedState as Partial<AppState> | undefined
+        return {
+          ...currentState,
+          ...p,
+          settings: {
+            ...defaultSettings,
+            ...p?.settings,
+            feeRules: { ...defaultSettings.feeRules, ...(p?.settings?.feeRules ?? {}) },
+          },
+        }
+      },
     },
   ),
 )

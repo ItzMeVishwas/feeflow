@@ -2,21 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { format } from "date-fns";
-import {
-  Area,
-  AreaChart,
-  Line,
-  ReferenceDot,
-  ReferenceLine,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { WaveChart, type WaveSeries } from "@/components/charts/wave-chart";
 import {
   buildForecast,
   summarizeForecast,
-  type ForecastEvent,
   type ForecastScenario,
 } from "@/lib/forecast";
 import { useStore } from "@/lib/store";
@@ -34,20 +23,10 @@ export type RunwayChartProps = {
 type Horizon = 30 | 60 | 90;
 const HORIZONS: Horizon[] = [30, 60, 90];
 
-// Theme colours come from src/app/globals.css. There is no --coral or --mint
-// variable there: --overdue (same #FF6B6B) stands in for coral, and --paid
-// (#3DD9A8) for mint. --muted-foreground is the theme-aware muted grey.
-const AMBER = "var(--amber)";
-const CORAL = "var(--overdue)";
-const MUTED = "var(--muted-foreground)";
-
-type ChartPoint = {
-  date: string;
-  balance: number;
-  baseline?: number;
-  label: string;
-  events: ForecastEvent[];
-};
+// WaveChart sets colours as SVG attributes, which cannot read CSS variables,
+// so these are hex values. AMBER matches the --amber theme variable.
+const AMBER = "#F2A93B";
+const BASELINE = "#94A3B8";
 
 // Parse "YYYY-MM-DD" as a local date to avoid UTC shifting the day.
 function parseIso(iso: string): Date {
@@ -57,42 +36,6 @@ function parseIso(iso: string): Date {
 
 function shortDate(iso: string): string {
   return format(parseIso(iso), "d MMM");
-}
-
-// Compact rupee label for chart axes: ₹60k, ₹45k, -₹5k. Small values stay whole.
-function formatCompactINR(v: number): string {
-  if (v === 0) return "₹0";
-  const sign = v < 0 ? "-" : "";
-  const abs = Math.abs(v);
-  if (abs >= 1000) return sign + "₹" + Math.round(abs / 1000) + "k";
-  return sign + "₹" + abs.toLocaleString("en-IN");
-}
-
-function RunwayTooltip({
-  active,
-  payload,
-}: {
-  active?: boolean;
-  payload?: ReadonlyArray<{ payload?: unknown }>;
-}) {
-  const point = payload?.[0]?.payload as ChartPoint | undefined;
-  if (!active || !point) return null;
-  return (
-    <div className="rounded-xl border border-white/20 bg-[#0E1726]/95 px-3 py-2 text-xs text-white shadow-lg">
-      <p className="font-semibold">{format(parseIso(point.date), "d MMM yyyy")}</p>
-      <p className="mt-0.5 tabular-nums">{formatINR(point.balance)}</p>
-      {point.events.length > 0 && (
-        <ul className="mt-1.5 space-y-0.5 border-t border-white/10 pt-1.5">
-          {point.events.map((ev, i) => (
-            <li key={`${ev.label}-${i}`} className="tabular-nums">
-              {ev.label} — {ev.direction === "in" ? "+" : "\u2212"}
-              {formatINR(ev.amount)}
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
 }
 
 export function RunwayChart({
@@ -109,12 +52,6 @@ export function RunwayChart({
   const [localHorizon, setLocalHorizon] = useState<Horizon>(30);
   const horizon = controlledHorizon ?? localHorizon;
   const setHorizon = onHorizonChange ?? setLocalHorizon;
-  const [prefersReducedMotion] = useState<boolean>(
-    () =>
-      typeof window !== "undefined" &&
-      typeof window.matchMedia === "function" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches,
-  );
 
   const drawBaseline = showBaseline && scenario !== undefined;
 
@@ -128,26 +65,38 @@ export function RunwayChart({
   );
   const summary = useMemo(() => summarizeForecast(points), [points]);
 
-  const chartData: ChartPoint[] = useMemo(
-    () =>
-      points.map((p, i) => ({
-        date: p.date,
-        balance: p.balance,
-        baseline: baselinePoints?.[i]?.balance,
-        label: shortDate(p.date),
-        events: p.events,
-      })),
-    [points, baselinePoints],
-  );
+  const labels = useMemo(() => points.map((p) => shortDate(p.date)), [points]);
 
-  // Fraction (0..1) from the top of the chart where balance = 0, for the split gradient.
-  // The baseline is included so the zero split matches the full y-axis range.
-  const zeroOffset = useMemo(() => {
-    const values = chartData.flatMap((p) => [p.balance, p.baseline ?? p.balance]);
-    const max = Math.max(0, ...values);
-    const min = Math.min(0, ...values);
-    return max === min ? 0 : max / (max - min);
-  }, [chartData]);
+  // Baseline comes first so the balance line draws on top of it.
+  const waveSeries: WaveSeries[] = useMemo(() => {
+    const series: WaveSeries[] = [];
+    if (baselinePoints) {
+      series.push({
+        key: "baseline",
+        label: "Without changes",
+        color: BASELINE,
+        values: baselinePoints.map((p) => p.balance),
+      });
+    }
+    series.push({
+      key: "balance",
+      label: "Balance",
+      color: AMBER,
+      values: points.map((p) => p.balance),
+    });
+    return series;
+  }, [points, baselinePoints]);
+
+  const lowestIndex = summary.lowestBalance
+    ? points.findIndex((p) => p.date === summary.lowestBalance?.date)
+    : -1;
+  const marker =
+    summary.lowestBalance && lowestIndex >= 0
+      ? {
+          index: lowestIndex,
+          label: `Lowest: ${formatINR(summary.lowestBalance.balance)} on ${shortDate(summary.lowestBalance.date)}`,
+        }
+      : undefined;
 
   const lowest = summary.lowestBalance;
   const overdueCount = invoices.filter((i) => i.status === "overdue").length;
@@ -203,79 +152,8 @@ export function RunwayChart({
         </p>
       ) : (
         <>
-          <div role="img" aria-label={ariaLabel} className="mt-5 h-[220px] w-full sm:h-[260px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData} margin={{ top: 24, right: 8, bottom: 0, left: 0 }}>
-                <defs>
-                  <linearGradient id="runwayFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset={0} stopColor="var(--amber)" stopOpacity={0.35} />
-                    <stop offset={zeroOffset} stopColor="var(--amber)" stopOpacity={0.02} />
-                    <stop offset={zeroOffset} stopColor="var(--overdue)" stopOpacity={0.02} />
-                    <stop offset={1} stopColor="var(--overdue)" stopOpacity={0.35} />
-                  </linearGradient>
-                </defs>
-                <XAxis
-                  dataKey="label"
-                  tick={{ fontSize: 11, fill: MUTED }}
-                  tickLine={false}
-                  axisLine={false}
-                  interval="preserveStartEnd"
-                  minTickGap={16}
-                />
-                <YAxis
-                  tickFormatter={formatCompactINR}
-                  tick={{ fontSize: 11, fill: MUTED }}
-                  tickLine={false}
-                  axisLine={false}
-                  width={84}
-                />
-                <Tooltip
-                  content={(p) => <RunwayTooltip active={p.active} payload={p.payload} />}
-                  cursor={{ stroke: MUTED, strokeDasharray: "3 3" }}
-                />
-                <ReferenceLine y={0} stroke={MUTED} strokeDasharray="4 4" />
-                <Area
-                  type="monotone"
-                  dataKey="balance"
-                  stroke={AMBER}
-                  strokeWidth={2}
-                  fill="url(#runwayFill)"
-                  isAnimationActive={!prefersReducedMotion}
-                  animationDuration={1200}
-                  animationEasing="ease-out"
-                />
-                {baselinePoints && (
-                  <Line
-                    type="monotone"
-                    dataKey="baseline"
-                    name="Without changes"
-                    stroke={MUTED}
-                    strokeOpacity={0.7}
-                    strokeWidth={1.5}
-                    strokeDasharray="4 3"
-                    dot={false}
-                    activeDot={false}
-                    isAnimationActive={false}
-                  />
-                )}
-                {lowest && (
-                  <ReferenceDot
-                    x={shortDate(lowest.date)}
-                    y={lowest.balance}
-                    r={5}
-                    fill={AMBER}
-                    stroke="var(--background)"
-                    strokeWidth={2}
-                    label={{
-                      value: `Lowest: ${formatINR(lowest.balance)} on ${shortDate(lowest.date)}`,
-                      position: "top",
-                      fill: AMBER,
-                      fontSize: 11,
-                    }}
-                  />
-                )}
-              </AreaChart>
-            </ResponsiveContainer>
+          <div role="img" aria-label={ariaLabel} className="mt-5 w-full">
+            <WaveChart series={waveSeries} labels={labels} height={240} zeroLine marker={marker} />
           </div>
           <p className="mt-4 text-sm text-slate-700 dark:text-slate-300">{runwayMessage}</p>
         </>

@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useMemo, useState, useSyncExternalStore } from "react"
 import type { FormEvent } from "react"
 
@@ -12,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RecordPaymentDialog } from "@/components/record-payment-dialog"
@@ -293,24 +294,32 @@ export default function StudentsPage() {
           >
             {reliability.label}
           </span>
-          {oldest ? (
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setReminderTarget({ invoice: oldest, student })}
-              >
-                Remind
-              </Button>
-              <Button
-                size="sm"
-                className={amberButtonClass}
-                onClick={() => setPaymentTarget({ invoice: oldest, student })}
-              >
-                Record payment
-              </Button>
-            </div>
-          ) : null}
+          <div className="flex items-center gap-2">
+            {oldest ? (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setReminderTarget({ invoice: oldest, student })}
+                >
+                  Remind
+                </Button>
+                <Button
+                  size="sm"
+                  className={amberButtonClass}
+                  onClick={() => setPaymentTarget({ invoice: oldest, student })}
+                >
+                  Record payment
+                </Button>
+              </>
+            ) : null}
+            <Link
+              href={`/students/${student.id}/statement`}
+              className={buttonVariants({ variant: "outline", size: "sm" })}
+            >
+              Statement
+            </Link>
+          </div>
         </div>
       </li>
     )

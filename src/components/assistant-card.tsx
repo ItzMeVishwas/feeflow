@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
 import { ChaseQueueDialog } from "@/components/chase-queue-dialog"
+import { AssistantOrbLazy } from "@/components/three/assistant-orb-lazy"
 import { getAdvice } from "@/lib/advisor"
 import { buildChaseQueue } from "@/lib/chase"
 import { toIsoDate } from "@/lib/invoice-status"
@@ -12,9 +13,6 @@ import { useStore } from "@/lib/store"
 import type { Advice } from "@/lib/advisor"
 
 const DISMISS_KEY = "feeflow-assistant-dismissed"
-
-const ORB_BACKGROUND =
-  "conic-gradient(from 0deg, #F2A93B, #2A1F3D, #3DD9A8, #F2A93B)"
 
 // Subscribed to nothing; used only to detect the client after hydration.
 const subscribeNoop = () => () => {}
@@ -58,6 +56,7 @@ export function AssistantCard() {
   const settings = useStore((s) => s.settings)
   const [chaseOpen, setChaseOpen] = useState(false)
   const [dismissed, setDismissed] = useState(false)
+  const [hovered, setHovered] = useState(false)
 
   const today = toIsoDate(new Date())
 
@@ -105,17 +104,12 @@ export function AssistantCard() {
     <section
       aria-labelledby="assistant-card-heading"
       className="glass-strong rounded-2xl p-5"
+      onPointerEnter={() => setHovered(true)}
+      onPointerLeave={() => setHovered(false)}
     >
       <div className="flex items-center gap-3">
-        <div className="relative size-10 shrink-0" aria-hidden="true">
-          <div
-            className="assistant-orb absolute inset-0 rounded-full"
-            style={{ background: ORB_BACKGROUND }}
-          />
-          <div
-            className="assistant-orb absolute inset-0 rounded-full opacity-60 blur-md"
-            style={{ background: ORB_BACKGROUND }}
-          />
+        <div className="relative size-20 shrink-0" aria-hidden="true">
+          <AssistantOrbLazy active={hovered} />
         </div>
         <h2
           id="assistant-card-heading"

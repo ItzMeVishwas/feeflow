@@ -9,6 +9,7 @@ import { OnTimeRateCard } from "@/components/on-time-rate-card"
 import { Progress } from "@/components/ui/progress"
 import { ReminderDialog } from "@/components/reminder-dialog"
 import { RunwayChart } from "@/components/runway-chart"
+import { TiltCard } from "@/components/tilt-card"
 import { TodayRail } from "@/components/today-rail"
 import { formatDate, formatINR } from "@/lib/format"
 import { useStore } from "@/lib/store"
@@ -255,7 +256,9 @@ export default function DashboardPage() {
     <div className="space-y-8">
       <section aria-label="Overview" className="grid items-stretch gap-4 lg:grid-cols-3">
         <div className="h-full space-y-4 lg:col-span-2">
-          <RunwayChart />
+          <TiltCard className="rounded-3xl">
+            <RunwayChart />
+          </TiltCard>
           <div className="grid gap-4 sm:grid-cols-2">
             <OnTimeRateCard />
             <CollectionsCard />

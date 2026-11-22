@@ -4,6 +4,7 @@ import { useMemo, useState, useSyncExternalStore } from "react"
 import { motion, useReducedMotion } from "motion/react"
 
 import { AssistantCard } from "@/components/assistant-card"
+import { TiltCard } from "@/components/tilt-card"
 import { Button } from "@/components/ui/button"
 import { ChaseQueueDialog } from "@/components/chase-queue-dialog"
 import { ReminderDialog } from "@/components/reminder-dialog"
@@ -72,7 +73,9 @@ export function TodayRail() {
       aria-labelledby="today-rail-heading"
       className="glass rounded-3xl p-6 h-full flex flex-col"
     >
-      <AssistantCard />
+      <TiltCard className="rounded-2xl">
+        <AssistantCard />
+      </TiltCard>
 
       <h2
         id="today-rail-heading"

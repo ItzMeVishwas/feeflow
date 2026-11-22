@@ -109,3 +109,34 @@ Paste these into Nexen one at a time, each in a new chat:
 - **Model:** free up to 15 students; Pro ₹199/month adds unlimited students, receipts and forecasts.
 - **Expansion:** coaching centres, music and dance teachers, and gyms. Same monthly-fee pattern.
 - **Why switch from a notebook:** one tap sends a polite reminder with a pay link, and the tutor can see cash 90 days ahead.
+
+## 7. Session log
+
+### Entry: 2026-11-22
+
+What shipped:
+
+1. **Landing page rebuild.** `src/app/page.tsx` now composes sections from `src/components/landing/`:
+   - `landing-nav.tsx`: sticky glass nav with smooth-scroll links (Product, How it works, Pricing, FAQ) and an amber "Open the app" button.
+   - `landing-hero.tsx`: keeps the FlowFieldLazy 3D hero, with an animated stats row labelled as demo figures.
+   - `trust-strip.tsx`, `before-after.tsx`, `how-it-works.tsx`, `features.tsx` (bento grid), `pricing.tsx`, `faq.tsx`, `final-cta.tsx` (CTA band and footer).
+   - `live-demo.tsx` with `demo-math.ts`: a 90-day balance demo with a slider (0 to 45 days late), a "Student leaves" toggle and a WaveChart. The sentence shows the lowest balance, plus a shortfall line when the balance goes negative.
+   - Section 4, item 6 (landing page) is now done.
+2. **"Can I afford this?" checker** on the forecast page. Logic in `src/lib/afford.ts` (`AFFORD_BUFFER = 5000`; verdicts Safe, Tight and Danger; the reason names the shortfall date). UI in `src/components/afford-box.tsx`. It runs `buildForecast` with a one-off extra expense dated today.
+3. **Promised dates on invoices.** `src/lib/store.ts` adds `promisedDate` on Invoice and a `setPromisedDate` action. The invoices page has "Promise a date", "Change promise" and "Clear promise" actions, and a mint "Promised <date>" chip. A promised date must be today or later.
+4. **Forecast basis toggle** (Due dates / Realistic). `src/lib/forecast.ts`: `buildForecast` takes a fifth parameter, `mode`, defaulting to "realistic". Due dates uses each invoice's due date. Realistic uses the parent's average lateness, overridden by a promised date.
+
+Checks run:
+
+- `npx tsc --noEmit` exits 0.
+- `npm run build` passes with 16 static pages (run with `NODE_OPTIONS="--dns-result-order=ipv4first"` on Windows).
+
+Open items and not verified:
+
+- Not checked in a browser: visual and layout checks, the 375px mobile layout, and how the landing demo's colours and text render.
+- Not checked: the Danger and Tight example numbers in the "Can I afford this?" checker.
+- Not checked: lint. The linter could not check these files.
+- Known caveat: a promised date already in the past is clamped to today by the existing forecast rule.
+- Known caveat: the Due dates basis does not apply the scenario student-delay in the same way as the lateness-based dates. Unverified.
+- Known gap: the landing FAQ says offline use and data export are "Not yet". Those are honest answers, not features.
+

@@ -36,6 +36,9 @@ FeeFlow turns that notebook into a calm, visual back office that does the chasin
 | **Parent payment page** | A clean fee card with a **UPI QR code** and a "Pay with UPI" button. No login, no backend: the data travels inside the link. |
 | **Chase autopilot** | One button walks through every late parent and picks the tone by how late they are (1–6 days friendly, 7–14 firm, 15+ final). |
 | **WhatsApp receipts** | After recording a payment, send a one-tap thank-you receipt showing what is still due. |
+| **Promised dates** | Mark the date a parent promised to pay. The invoice shows a "Promised" chip, and the forecast uses that date. |
+| **Landing page** | A premium product site with an interactive demo: drag the slider to see how a late payer changes the cash balance. |
+
 
 ### See the future
 | | |
@@ -44,6 +47,9 @@ FeeFlow turns that notebook into a calm, visual back office that does the chasin
 | **What-if scenarios** | "What if Aarav pays 45 days late and I buy a ₹40k laptop?" The wave redraws against a baseline and explains the impact in one sentence. |
 | **FeeFlow Assistant** | A 3D morphing orb card with the single most useful insight, e.g. "Cash dips on 5 Feb. Collecting from Advait and Tara covers it." |
 | **Parent reliability** | An On time, Usually late or Risky badge for every family. |
+| **Can I afford this?** | Forecast checker for a one-off expense: Safe, Tight or Danger, with the date cash would run short. |
+| **Forecast basis toggle** | Switch the 90-day forecast between Due dates and Realistic (each parent's real lateness, or a promised date). |
+
 
 ### Run the business
 - **Attendance:** one-tap tiles per batch, monthly %, and a 6-week heat strip for each student.

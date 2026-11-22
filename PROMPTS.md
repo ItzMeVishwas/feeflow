@@ -90,5 +90,15 @@ Follow-ups fixed a recharts v3 tooltip type error and a React 19 `JSX` namespace
 ### Ctrl+K plain-language command palette
 > /feeflow-design new feature: a Ctrl+K command palette that understands plain language. src/lib/command-parser.ts rule-based parseCommand ... "pooja paid 1800", "remind tara", "add rohan 2000 evening batch" ... command-palette.tsx with shadcn Command ... parsed intent as top item with preview, Enter executes
 
+### Landing page rebuild
+> /feeflow-design rebuild src/app/page.tsx from sections in src/components/landing/ ... sticky glass nav, keep the 3D hero, interactive 90-day demo (slider and "Student leaves" toggle), pricing, FAQ and final CTA
+
+### Can I afford this?
+> /feeflow-design add a "Can I afford this?" checker to the forecast page ... src/lib/afford.ts verdicts Safe / Tight / Danger with a reason naming the shortfall date, src/components/afford-box.tsx ... reuses buildForecast with a one-off expense dated today
+
+### Promised dates and realistic toggle
+> /feeflow-design add promised dates to invoices ("Promise a date", mint "Promised" chip, must be today or later) and a Due dates / Realistic toggle on the forecast ... buildForecast takes a mode parameter, default Realistic
+
+
 ---
 Account 1 (8M tokens) ran out after this point. Work continues on account 2. See HANDOFF.md section 4.

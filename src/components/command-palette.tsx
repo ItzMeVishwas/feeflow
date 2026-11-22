@@ -15,7 +15,7 @@ import {
   CommandList,
 } from "@/components/ui/command"
 import { parseCommand, type ParsedCommand } from "@/lib/command-parser"
-import { formatINR } from "@/lib/format"
+import { formatDate, formatINR } from "@/lib/format"
 import { amountDue, deriveStatus, toIsoDate } from "@/lib/invoice-status"
 import { usePaletteStore } from "@/lib/palette-store"
 import { useStore, type Invoice, type Student } from "@/lib/store"
@@ -34,7 +34,7 @@ const QUICK_ACTIONS = [
   { id: "chase", label: "Chase all overdue", keywords: "chase overdue remind" },
 ]
 
-const TRY_SAYING = ["pooja paid 1800", "remind tara", "add rohan 2000 evening batch"]
+const TRY_SAYING = ["pooja paid 1800", "remind tara", "add rohan 2000 evening batch", "rohan owes 1500 due friday"]
 
 const MONTH_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
@@ -88,6 +88,10 @@ function previewOf(parsed: NonNullable<ParsedCommand>, students: Student[]): Rea
           {parsed.batch ? ` (${parsed.batch} batch)` : ""}
         </>
       )
+    case "invoice": {
+      const student = students.find((s) => s.id === parsed.studentId)
+      return `Create a ${formatINR(parsed.amount, { wholeRupees: true })} invoice for ${student?.name ?? "this student"}, due ${formatDate(parsed.dueDate)}`
+    }
     case "navigate": {
       const page = PAGES.find((p) => p.href === parsed.href)
       return <>Go to {page?.label ?? parsed.href}</>
@@ -186,6 +190,19 @@ export function CommandPalette() {
           active: true,
         })
         toast.success(`Added ${command.name}`)
+        return
+      case "invoice":
+        closePalette()
+        addInvoice({
+          studentId: command.studentId,
+          amount: command.amount,
+          month: command.dueDate.slice(0, 7),
+          dueDate: command.dueDate,
+          status: "unpaid",
+          paidDate: null,
+          remindersSent: 0,
+        })
+        toast.success(`Created ${formatINR(command.amount)} invoice, due ${formatDate(command.dueDate)}`)
         return
       case "navigate":
         closePalette()

@@ -16,6 +16,7 @@ import {
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { MessageAllDialog } from "@/components/message-all-dialog"
 import { RecordPaymentDialog } from "@/components/record-payment-dialog"
 import { ReminderDialog } from "@/components/reminder-dialog"
 import { parentReliability } from "@/lib/forecast"
@@ -136,6 +137,7 @@ export default function StudentsPage() {
   const [errors, setErrors] = useState<StudentFormErrors>({})
   const [reminderTarget, setReminderTarget] = useState<InvoiceTarget | null>(null)
   const [paymentTarget, setPaymentTarget] = useState<InvoiceTarget | null>(null)
+  const [messageAllOpen, setMessageAllOpen] = useState(false)
 
   // Sum of each student's invoices that are not yet paid.
   const amountOwedByStudent = useMemo(() => {
@@ -395,6 +397,9 @@ export default function StudentsPage() {
           >
             Export CSV
           </Button>
+          <Button variant="outline" onClick={() => setMessageAllOpen(true)}>
+            Message all parents
+          </Button>
           <Button className={amberButtonClass} onClick={() => setDialogOpen(true)}>
             Add student
           </Button>
@@ -474,6 +479,12 @@ export default function StudentsPage() {
           }}
         />
       ) : null}
+
+      <MessageAllDialog
+        open={messageAllOpen}
+        onOpenChange={setMessageAllOpen}
+        students={students}
+      />
     </div>
   )
 }

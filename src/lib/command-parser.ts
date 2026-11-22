@@ -1,10 +1,12 @@
 // Rule-based parser for the command palette. Pure functions only:
-// no AI calls, no network, no imports from other project files.
+// no AI calls, no network. The one import is the date formatter from invoice-status.
+import { toIsoDate } from '@/lib/invoice-status';
 
 export type ParsedCommand =
   | { kind: 'payment'; studentId: string; amount: number; month?: string } // month 'YYYY-MM'
   | { kind: 'remind'; studentId: string }
   | { kind: 'addStudent'; name: string; fee: number; batch?: string }
+  | { kind: 'invoice'; studentId: string; amount: number; dueDate: string } // dueDate 'YYYY-MM-DD'
   | { kind: 'navigate'; href: string }
   | null;
 
@@ -30,6 +32,7 @@ const NAV_ROUTES = new Map<string, string>([
 ]);
 
 const REMIND_WORDS = ['remind', 'chase', 'nudge'];
+const WEEKDAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']; // index = Date.getDay()
 const WORD_PATTERN = /^[a-z]+$/;
 const AMOUNT_PATTERN = /^\d+(\.\d+)?$/;
 
@@ -93,6 +96,28 @@ function buildPayment(
   return month === undefined
     ? { kind: 'payment', studentId, amount }
     : { kind: 'payment', studentId, amount, month };
+}
+
+function addDays(base: Date, days: number): Date {
+  return new Date(base.getFullYear(), base.getMonth(), base.getDate() + days);
+}
+
+// "today", "tomorrow", a weekday (next occurrence on or after today), or "YYYY-MM-DD" -> ISO date. Null otherwise.
+function resolveDueDate(when: string, today: Date): string | null {
+  if (when === 'today') return toIsoDate(addDays(today, 0));
+  if (when === 'tomorrow') return toIsoDate(addDays(today, 1));
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(when)) {
+    const [year, month, day] = when.split('-').map(Number);
+    const check = new Date(year, month - 1, day);
+    const valid = check.getFullYear() === year && check.getMonth() === month - 1 && check.getDate() === day;
+    return valid ? when : null;
+  }
+
+  const dayIndex = WEEKDAYS.findIndex((name) => when === name || when === name.slice(0, 3));
+  if (dayIndex === -1) return null;
+  const daysAhead = (dayIndex - today.getDay() + 7) % 7;
+  return toIsoDate(addDays(today, daysAhead));
 }
 
 function titleCase(words: string[]): string {
@@ -210,6 +235,17 @@ export function parseCommand(text: string, state: CommandState, today: Date = ne
 
     const name = titleCase(nameTokens);
     return batch === undefined ? { kind: 'addStudent', name, fee } : { kind: 'addStudent', name, fee, batch };
+  }
+
+  // "<name> owes <amount> due <when>", e.g. "rohan owes 1500 due friday"
+  const owesIndex = tokens.indexOf('owes');
+  if (owesIndex > 0) {
+    const studentId = matchStudent(tokens.slice(0, owesIndex).join(' '), state.students);
+    const amount = parseAmount(tokens[owesIndex + 1] ?? '');
+    if (studentId === null || amount === null) return null;
+    if (tokens[owesIndex + 2] !== 'due' || tokens.length !== owesIndex + 4) return null;
+    const dueDate = resolveDueDate(tokens[owesIndex + 3], today);
+    return dueDate === null ? null : { kind: 'invoice', studentId, amount, dueDate };
   }
 
   // "<page>" or "go to <page>"

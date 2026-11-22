@@ -1,33 +1,28 @@
 "use client"
 
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react"
-import { useRouter } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
-import { ChaseQueueDialog } from "@/components/chase-queue-dialog"
-import { getAdvice } from "@/lib/advisor"
-import { buildChaseQueue } from "@/lib/chase"
+import { ReminderDialog } from "@/components/reminder-dialog"
+import { buildChaseQueue, type ChaseItem } from "@/lib/chase"
+import { formatDate, formatINR } from "@/lib/format"
 import { toIsoDate } from "@/lib/invoice-status"
 import { useStore } from "@/lib/store"
-import type { Advice } from "@/lib/advisor"
 
 const DISMISS_KEY = "feeflow-assistant-dismissed"
 
 // Subscribed to nothing; used only to detect the client after hydration.
 const subscribeNoop = () => () => {}
 
-// Wraps the key amount in <strong> when it appears in the headline.
-function renderHeadline(headline: string, keyPhrase: Advice["keyPhrase"]) {
-  if (!keyPhrase) return headline
-  const index = headline.indexOf(keyPhrase)
-  if (index === -1) return headline
-  return (
-    <>
-      {headline.slice(0, index)}
-      <strong>{keyPhrase}</strong>
-      {headline.slice(index + keyPhrase.length)}
-    </>
-  )
+// One plain sentence describing the single most useful action.
+function actionSentence(item: ChaseItem): string {
+  const firstName = item.student.name.trim().split(/\s+/)[0] ?? item.student.name
+  const amount = formatINR(item.amountDue, { wholeRupees: true })
+  if (item.daysLate > 0) {
+    const unit = item.daysLate === 1 ? "day" : "days"
+    return `Remind ${firstName} today, ${amount} is ${item.daysLate} ${unit} late`
+  }
+  return `Remind ${firstName} before ${formatDate(item.invoice.dueDate)}, ${amount} is due`
 }
 
 export function AssistantCard() {
@@ -37,27 +32,22 @@ export function AssistantCard() {
     () => true,
     () => false,
   )
-  const router = useRouter()
 
   const students = useStore((s) => s.students)
   const invoices = useStore((s) => s.invoices)
   const bills = useStore((s) => s.bills)
   const settings = useStore((s) => s.settings)
   const attendance = useStore((s) => s.attendance)
-  const [chaseOpen, setChaseOpen] = useState(false)
+  const [reminderOpen, setReminderOpen] = useState(false)
   const [dismissed, setDismissed] = useState(false)
 
   const today = toIsoDate(new Date())
-
-  const advice = useMemo(
-    () => getAdvice({ students, invoices, bills, settings, attendance }, today),
-    [students, invoices, bills, settings, attendance, today],
-  )
 
   const chaseQueue = useMemo(
     () => buildChaseQueue({ students, invoices, bills, settings, attendance }, today),
     [students, invoices, bills, settings, attendance, today],
   )
+  const top = chaseQueue[0] as ChaseItem | undefined
 
   // Read the dismissal after mount so the server and first client render match.
   useEffect(() => {
@@ -77,19 +67,7 @@ export function AssistantCard() {
     setDismissed(true)
   }
 
-  function handleAction() {
-    if (advice.action === "chaseAll") setChaseOpen(true)
-    else if (advice.action === "openForecast") router.push("/forecast")
-  }
-
   if (!mounted || dismissed) return null
-
-  const actionLabel =
-    advice.action === "chaseAll"
-      ? "Chase them now"
-      : advice.action === "openForecast"
-        ? "See forecast"
-        : advice.actionLabel
 
   return (
     <section
@@ -103,18 +81,32 @@ export function AssistantCard() {
         Your next step
       </h2>
 
-      <p className="mt-3 text-base leading-relaxed text-[#0F1E3C]">
-        {renderHeadline(advice.headline, advice.keyPhrase)}
-      </p>
+      {top ? (
+        <>
+          <p className="mt-3 text-base leading-relaxed text-[#0F1E3C]">
+            {actionSentence(top)}
+          </p>
 
-      {advice.action !== "none" && (
-        <Button
-          type="button"
-          className="mt-5 h-11 w-full rounded-xl bg-[#1E3A6E] font-semibold text-white hover:bg-[#1E3A6E]/90"
-          onClick={handleAction}
-        >
-          {actionLabel}
-        </Button>
+          <Button
+            type="button"
+            className="mt-5 h-11 w-full rounded-xl bg-[#1E3A6E] font-semibold text-white hover:bg-[#1E3A6E]/90"
+            onClick={() => setReminderOpen(true)}
+          >
+            Send reminder
+          </Button>
+
+          <ReminderDialog
+            invoice={top.invoice}
+            student={top.student}
+            upiId={settings.upiId}
+            open={reminderOpen}
+            onClose={() => setReminderOpen(false)}
+          />
+        </>
+      ) : (
+        <p className="mt-3 text-base leading-relaxed text-[#0F1E3C]">
+          Nothing to chase today. Your parents are paid up.
+        </p>
       )}
 
       <div className="mt-3 flex justify-center">
@@ -128,12 +120,6 @@ export function AssistantCard() {
           Dismiss
         </Button>
       </div>
-
-      <ChaseQueueDialog
-        open={chaseOpen}
-        onClose={() => setChaseOpen(false)}
-        queue={chaseQueue}
-      />
     </section>
   )
 }

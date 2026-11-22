@@ -17,6 +17,8 @@ import { Button, buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { MessageAllDialog } from "@/components/message-all-dialog"
+import { PageHeader } from "@/components/page-header"
+import { StatusPill, type PillTone } from "@/components/status-pill"
 import { RecordPaymentDialog } from "@/components/record-payment-dialog"
 import { ReminderDialog } from "@/components/reminder-dialog"
 import { parentReliability } from "@/lib/forecast"
@@ -59,8 +61,13 @@ const formFields: {
   { key: "monthlyFee", label: "Monthly fee (₹)", type: "number", required: true },
 ]
 
-const amberButtonClass =
-  "bg-[var(--amber)] text-[#1A1206] hover:bg-[var(--amber)]/90 focus-visible:ring-2 focus-visible:ring-[var(--amber)]"
+// Primary action colour: navy with white text.
+const primaryButtonClass =
+  "bg-[#1E3A6E] text-white hover:bg-[#1E3A6E]/90 focus-visible:ring-2 focus-visible:ring-[#1E3A6E]"
+
+// White content card: 1px border, 24px radius, soft two-part shadow.
+const cardClass =
+  "rounded-3xl border border-[#E3E8F0] bg-white shadow-[0_1px_2px_rgba(15,30,60,.06),0_8px_24px_rgba(15,30,60,.06)] dark:border-white/10 dark:bg-[#121E36]"
 
 function validateStudentForm(values: StudentFormValues): StudentFormErrors {
   const errors: StudentFormErrors = {}
@@ -80,14 +87,14 @@ function validateStudentForm(values: StudentFormValues): StudentFormErrors {
 }
 
 // Reliability is the average number of days a parent pays late.
-function reliabilityFor(days: number) {
+function reliabilityFor(days: number): { label: string; tone: PillTone } {
   if (days < 4) {
-    return { label: "On time", className: "bg-[var(--mint)]/20 text-foreground" }
+    return { label: "On time", tone: "paid" }
   }
   if (days < 15) {
-    return { label: "Usually late", className: "bg-[var(--amber)]/20 text-foreground" }
+    return { label: "Usually late", tone: "due" }
   }
-  return { label: "Risky", className: "bg-[var(--coral)]/20 text-foreground" }
+  return { label: "Risky", tone: "overdue" }
 }
 
 function initialsOf(name: string) {
@@ -250,7 +257,7 @@ export default function StudentsPage() {
     return (
       <li
         key={student.id}
-        className="glass flex flex-col gap-3 rounded-2xl p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
+        className="flex flex-col gap-3 px-4 py-3 transition-colors hover:bg-[#F5F8FC] dark:hover:bg-white/5 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
       >
         <div className="flex min-w-0 items-center gap-3">
           <span
@@ -290,11 +297,8 @@ export default function StudentsPage() {
               {formatINR(owed)}
             </p>
           </div>
-          <span
-            title={`Pays on average ${days} days late`}
-            className={`rounded-xl px-2.5 py-1 text-xs font-medium ${reliability.className}`}
-          >
-            {reliability.label}
+          <span title={`Pays on average ${days} days late`}>
+            <StatusPill tone={reliability.tone}>{reliability.label}</StatusPill>
           </span>
           <div className="flex items-center gap-2">
             {oldest ? (
@@ -308,7 +312,7 @@ export default function StudentsPage() {
                 </Button>
                 <Button
                   size="sm"
-                  className={amberButtonClass}
+                  className={primaryButtonClass}
                   onClick={() => setPaymentTarget({ invoice: oldest, student })}
                 >
                   Record payment
@@ -330,7 +334,7 @@ export default function StudentsPage() {
   function renderBody() {
     if (!hydrated) {
       return (
-        <p className="glass rounded-2xl p-6 text-center text-muted-foreground">
+        <p className={`${cardClass} p-6 text-center text-muted-foreground`}>
           Loading students…
         </p>
       )
@@ -338,14 +342,14 @@ export default function StudentsPage() {
 
     if (students.length === 0) {
       return (
-        <div className="glass flex flex-col items-center gap-2 rounded-2xl p-6 text-center">
+        <div className={`${cardClass} flex flex-col items-center gap-2 p-6 text-center`}>
           <p className="font-medium text-foreground">No students yet.</p>
           <p className="text-sm text-muted-foreground">
             Add your first student to start tracking fees.
           </p>
           <Button
             size="sm"
-            className={`mt-2 ${amberButtonClass}`}
+            className={`mt-2 ${primaryButtonClass}`}
             onClick={() => setDialogOpen(true)}
           >
             Add student
@@ -356,55 +360,59 @@ export default function StudentsPage() {
 
     if (visibleStudents.length === 0) {
       return (
-        <p className="glass rounded-2xl p-6 text-center text-muted-foreground">
+        <p className={`${cardClass} p-6 text-center text-muted-foreground`}>
           {`No students match "${query.trim()}"`}
         </p>
       )
     }
 
     return (
-      <ul role="list" className="flex flex-col gap-3">
+      <ul
+        role="list"
+        className={`${cardClass} divide-y divide-[#E3E8F0] overflow-hidden dark:divide-white/10`}
+      >
         {visibleStudents.map(renderStudentRow)}
       </ul>
     )
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="font-display text-2xl font-semibold tracking-tight text-foreground">
-            Students
-          </h1>
-          {hydrated ? (
-            <p className="text-sm text-muted-foreground">{`${activeCount} active`}</p>
-          ) : null}
-        </div>
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title="Students"
+        description="See who is active, what each parent owes and how reliably they pay."
+        action={
+          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+            <Input
+              type="search"
+              aria-label="Search students"
+              placeholder="Search by name, parent, phone or batch"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              className="w-full rounded-xl sm:w-64"
+            />
+            <Button
+              variant="outline"
+              onClick={handleExportCsv}
+              disabled={!hydrated || visibleStudents.length === 0}
+            >
+              Export CSV
+            </Button>
+            <Button variant="outline" onClick={() => setMessageAllOpen(true)}>
+              Message all parents
+            </Button>
+            <Button className={primaryButtonClass} onClick={() => setDialogOpen(true)}>
+              Add student
+            </Button>
+          </div>
+        }
+      />
 
-        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
-          <Input
-            type="search"
-            aria-label="Search students"
-            placeholder="Search by name, parent, phone or batch"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            className="w-full rounded-xl sm:w-64"
-          />
-          <Button
-            variant="outline"
-            onClick={handleExportCsv}
-            disabled={!hydrated || visibleStudents.length === 0}
-          >
-            Export CSV
-          </Button>
-          <Button variant="outline" onClick={() => setMessageAllOpen(true)}>
-            Message all parents
-          </Button>
-          <Button className={amberButtonClass} onClick={() => setDialogOpen(true)}>
-            Add student
-          </Button>
-        </div>
-      </div>
+      {hydrated ? (
+        <p className="-mt-4 text-sm tabular-nums text-[#5B6B84] dark:text-[#93A3BC]">
+          {`${activeCount} active`}
+        </p>
+      ) : null}
 
       {renderBody()}
 

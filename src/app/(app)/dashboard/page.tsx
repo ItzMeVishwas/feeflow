@@ -342,12 +342,17 @@ export default function DashboardPage() {
   const firstBelowZero = forecastSummary.firstBelowZeroDate
   const safeUntilIso = firstBelowZero ? shiftIsoDays(firstBelowZero, -1) : null
   const alreadyBelowZero = safeUntilIso !== null && safeUntilIso < today
-  const safeUntilValue = safeUntilIso && !alreadyBelowZero ? formatDate(safeUntilIso) : "—"
+  const noDip = !firstBelowZero
+  const safeUntilValue = noDip
+    ? `All ${FORECAST_DAYS} days`
+    : safeUntilIso && !alreadyBelowZero
+      ? formatDate(safeUntilIso)
+      : "—"
   const safeUntilDetail = alreadyBelowZero
     ? "Balance is already below zero"
     : safeUntilIso
       ? "Balance stays above zero until this day"
-      : `No shortfall in the next ${FORECAST_DAYS} days`
+      : `No dip in the next ${FORECAST_DAYS} days`
 
   const chaseQueue = useMemo(
     () => buildChaseQueue({ students, invoices, bills, settings, attendance }, today),
@@ -384,7 +389,11 @@ export default function DashboardPage() {
           />
           <div className="rounded-2xl bg-white border border-[#E3E8F0] p-4 shadow-[0_1px_2px_rgba(15,30,60,.06),0_8px_24px_rgba(15,30,60,.06)] dark:bg-[#121E36] dark:border-white/10">
             <p className="text-sm text-[#5B6B84] dark:text-[#93A3BC] font-medium">Safe until</p>
-            <span className="mt-2 block text-2xl font-extrabold tracking-tight text-[#0F1E3C] dark:text-[#E6ECF5]">
+            <span
+              className={`mt-2 block text-2xl font-extrabold tracking-tight ${
+                noDip ? "text-[#3DD9A8]" : "text-[#0F1E3C] dark:text-[#E6ECF5]"
+              }`}
+            >
               {safeUntilValue}
             </span>
             <p className="mt-1 text-xs text-[#5B6B84] dark:text-[#93A3BC]">{safeUntilDetail}</p>

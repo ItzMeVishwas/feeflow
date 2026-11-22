@@ -102,3 +102,65 @@ Follow-ups fixed a recharts v3 tooltip type error and a React 19 `JSX` namespace
 
 ---
 Account 1 (8M tokens) ran out after this point. Work continues on account 2. See HANDOFF.md section 4.
+
+
+## Session: feature sprint
+
+Prompts are summarised, not verbatim.
+
+### 1. Landing page rebuild
+> Rebuild the landing page as a premium product site, keeping the 3D hero, copy tone and section order.
+Produced: landing page (`src/app/page.tsx`, `src/components/landing/`).
+
+### 2. Landing dashboard tweaks
+> Make the live demo slider change the outcome shown on the landing dashboard.
+Produced: landing demo. Commit: `fix: live demo slider changes outcome`.
+
+### 3. "Can I afford this?" checker
+> Add an affordability checker to the forecast page that gives a Safe / Tight / Danger verdict using the forecast engine.
+Produced: `src/lib/afford.ts`, `src/components/afford-box.tsx`, forecast page.
+
+### 4. Promised dates and Realistic vs Due forecast
+> Add promised dates to invoices and a Due dates / Realistic toggle on the forecast.
+Produced: invoices (promised date chip), `src/lib/forecast.ts` (`buildForecast` mode parameter, default Realistic).
+
+### 5. Docs update
+> Update the HANDOFF and PROMPTS docs for the work done so far.
+Produced: `HANDOFF.md`, `PROMPTS.md`.
+
+### 6. Message all parents and Ctrl+K invoice command
+> Message all parents from the students page using templates and wa.me links, and add a Ctrl+K command like "rohan owes 1500 due friday".
+Produced: students page, command parser and command palette (`src/lib/command-parser.ts`, `src/components/command-palette.tsx`).
+
+### 7. Calendar page
+> Build a calendar page showing fees and bills per day, with a month summary line.
+Produced: calendar page (`src/app/(app)/calendar/page.tsx`).
+
+### 8. Bug fixes: calendar demo data and narrow-screen chips
+> Fix the calendar demo data and the chips that break on narrow screens.
+Produced: calendar page and chip layout.
+
+### 9. Mobile bottom nav
+> Make the mobile bottom nav show 4 tabs plus a More sheet.
+Produced: mobile bottom nav in the app shell.
+
+### 10. Palette and motion slices
+> Apply a light navy theme with Plus Jakarta font, a dashboard hero and next-step card, restyled app pages and a landing redesign.
+Produced: theme and font setup, dashboard, app pages, landing.
+
+### 11. Premium motion pass
+> Add ripples, confetti, landing waves, a marquee and chart draw-in.
+Produced: motion across the landing page and dashboard charts.
+
+### 12. Settings pro panel
+> Rebuild Settings with tabs for Profile, Fees and reminders, Appearance and Data.
+Produced: `src/app/(app)/settings/page.tsx`, `src/lib/store.ts`. Commit: `3f5fd6a`.
+
+### 13. Payment receipts and monthly report
+> Send payment receipts on WhatsApp with a printable receipt page, and add a monthly report page.
+Produced: WhatsApp receipt message, `/receipt` page, `/report` page.
+
+### 14. README rewrite for submission
+> Rewrite the README for the hackathon submission: short, professional and skimmable.
+Produced: `README.md`.
+

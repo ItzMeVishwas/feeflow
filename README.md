@@ -1,97 +1,57 @@
-<h1 align="center">FeeFlow</h1>
+# FeeFlow
 
-<p align="center">
-  <b>Know who owes you. See next month's cash. Chase fees in one tap.</b><br/>
-  The back office for India's home tutors: fees, WhatsApp reminders, UPI pay links and a 90-day cash forecast.
-</p>
+Live demo: LIVE_URL_HERE
 
-<p align="center">
-  Built for the <b>Codebenders ACE Builders Hackathon 2026</b> · Problem Statement 1: <i>The One-Person Back Office</i><br/>
-  Built entirely inside the Codebenders IDE with Nexen.
-</p>
-
----
+Fee and cash-flow back office for Indian home tutors.
 
 ## The problem
 
-A home tutor in Pune teaching 12 students runs her whole business from WhatsApp chats and a notebook.
-Every month the same things go wrong:
-
-- **Fees arrive late, bills don't.** Rent and her assistant's salary are due on fixed dates; parents pay whenever they remember.
-- **Chasing is awkward.** She types the same reminder again and again and worries about sounding rude.
-- **She can't see next month.** She has no idea whether she'll be short on the 5th, when rent is due.
-
-Small businesses rarely fail for lack of customers. They fail because money arrives late and bills arrive on time.
+Indian home tutors chase fees on WhatsApp and have no view of their cash. Rent and assistant salaries are due on fixed dates, parents pay whenever they remember, and nobody can say whether next month's cash will cover the bills.
 
 ## The solution
 
-FeeFlow turns that notebook into a calm, visual back office that does the chasing for her and shows her cash before it happens.
+FeeFlow replaces the notebook and the WhatsApp chase with one screen. It lists who owes money and by how much, sends WhatsApp reminders with a UPI pay link, and forecasts the daily cash balance for the next 90 days using each parent's real payment history rather than the due date. Payments happen in the parent's own UPI app. FeeFlow never moves money.
 
-### Core flow
-| | |
-|---|---|
-| **Invoices in one click** | "Generate this month's invoices" creates one per active student. Partial payments are tracked, with an Undo option. |
-| **Who owes me** | Overdue first, grouped by 0–15 / 16–30 / 30+ days late, with an aging bar on the dashboard. |
-| **WhatsApp reminders** | Friendly, firm or final tone, in English or Hinglish. Each reminder includes a link to a **parent payment page**. |
-| **Parent payment page** | A clean fee card with a **UPI QR code** and a "Pay with UPI" button. No login, no backend: the data travels inside the link. |
-| **Chase autopilot** | One button walks through every late parent and picks the tone by how late they are (1–6 days friendly, 7–14 firm, 15+ final). |
-| **WhatsApp receipts** | After recording a payment, send a one-tap thank-you receipt showing what is still due. |
-| **Promised dates** | Mark the date a parent promised to pay. The invoice shows a "Promised" chip, and the forecast uses that date. |
-| **Landing page** | A premium product site with an interactive demo: drag the slider to see how a late payer changes the cash balance. |
+## Features
 
-
-### See the future
-| | |
-|---|---|
-| **90-day cash runway** | A glowing waveform of the daily balance. It predicts when each fee will arrive from that parent's real lateness history, not the due date. |
-| **What-if scenarios** | "What if Aarav pays 45 days late and I buy a ₹40k laptop?" The wave redraws against a baseline and explains the impact in one sentence. |
-| **FeeFlow Assistant** | A 3D morphing orb card with the single most useful insight, e.g. "Cash dips on 5 Feb. Collecting from Advait and Tara covers it." |
-| **Parent reliability** | An On time, Usually late or Risky badge for every family. |
-| **Can I afford this?** | Forecast checker for a one-off expense: Safe, Tight or Danger, with the date cash would run short. |
-| **Forecast basis toggle** | Switch the 90-day forecast between Due dates and Realistic (each parent's real lateness, or a promised date). |
-
-
-### Run the business
-- **Attendance:** one-tap tiles per batch, monthly %, and a 6-week heat strip for each student.
-- **Monthly parent statement:** a printable A4 statement (fees, payments, attendance, UPI QR) to download as PDF or share on WhatsApp.
-- **Insights:** profit and expenses wave, margin, the **best day to send reminders** (from when parents actually pay), late-fee and sibling-discount rules.
-- **Bills:** recurring and one-off costs, monthly fixed costs, and how many days your cash lasts.
-- **Ctrl+K in plain language:** type *"tara paid 1200 for oct"*, *"remind advait"* or *"add rohan 2000 evening batch"* and press Enter.
-- **On-time rate gauge, 6-month collections wave**, onboarding (demo data or start fresh), settings, **backup and restore** (JSON), CSV export.
-- **Light and dark glass themes**, a slim icon-rail sidebar, a mobile bottom nav, and installable as a **PWA**.
+| Group | Feature | What it does |
+|---|---|---|
+| Get paid | Chase queue | One action walks through overdue parents, with the tone picked by how late they are (1 to 6 days friendly, 7 to 14 firm, 15 or more final). |
+| Get paid | WhatsApp reminders | Builds a reminder in English or Hinglish, in friendly, firm or final tone, and opens it in WhatsApp. |
+| Get paid | UPI pay links | A public parent page with a UPI QR code and a Pay with UPI button. No login, and the invoice data travels inside the link. |
+| Get paid | Receipts | After recording a payment, send a receipt over WhatsApp or open a printable receipt page. |
+| Get paid | Broadcast | Message all parents from one dialog. |
+| Know your cash | 90-day forecast | A daily cash balance for the next 90 days, drawn as a wave chart. |
+| Know your cash | Realistic vs due-date forecast | Switch the forecast between due dates and realistic dates, based on each parent's lateness or a promised date. |
+| Know your cash | Can I afford this? | Checks a one-off expense as Safe, Tight or Danger and names the date cash would run short. |
+| Know your cash | Calendar | A month view of fees and their status, with a sheet for each day. |
+| Know your cash | Monthly report | Pick a month to see expected vs received, collection rate, the top 3 late parents, and bills and profit. Printable. |
+| Save time | Ctrl+K quick capture | Command palette (Ctrl+K or Cmd+K) with plain-language commands such as "tara paid 1200 for oct". |
+| Save time | Promised dates | Record the date a parent promised to pay. The invoice shows a Promised chip and the forecast uses that date. |
+| Save time | Attendance | Mark attendance per student and see it per batch. |
+| Save time | Settings | Tutor profile, UPI id, fee and reminder defaults, theme, and data reset. |
 
 ## Business model
 
-| Plan | Price | For |
+These are the planned plans, as shown in the pricing section of the landing page.
+
+| Plan | Price | Includes |
 |---|---|---|
-| Free | ₹0 | Up to 15 students |
-| Pro | ₹199 / month | Unlimited students, receipts, forecasts, priority support |
+| Free | ₹0 to start | Up to 15 students |
+| Pro | ₹199 per month | Unlimited students, receipts for every payment, 90-day cash forecasts, priority support |
 
-**Why tutors switch from a notebook:** one tap sends a polite reminder with a pay link, and FeeFlow shows whether rent is covered 90 days ahead.
-**Expansion:** coaching centres, music and dance teachers, sports coaches and gyms. They all share the same monthly-fee pattern.
+## Tech stack
 
-## Tech
-
-- **Next.js 16** (App Router, Turbopack), **React 19**, **TypeScript**, **Tailwind v4**, **shadcn/ui**
-- **Zustand** with persist: all data stays in the browser (localStorage), so there is no backend and no sign-up.
-- **three.js + @react-three/fiber:** a WebGL particle-wave hero and the 3D assistant orb, both lazy-loaded and switched off when reduced motion is on.
-- Custom **SVG WaveChart**: glow, shimmer, draw-in and a scrubber tooltip. No chart library look.
-- framer-motion / motion, motion-primitives animated numbers, cmdk, sonner, qrcode.react, next-themes.
-
-```
-src/
-  app/
-    page.tsx                  landing page (3D hero, live demo, pricing, FAQ)
-    pay/                      public parent payment page
-    (app)/dashboard|students|attendance|invoices|bills|forecast|insights|settings
-    (app)/students/[id]/statement   printable monthly statement
-  components/                 runway-chart, charts/wave-chart, three/*, assistant-card,
-                              chase-queue-dialog, command-palette, reminder-dialog ...
-  lib/                        store, seed, forecast, advisor, chase, insights,
-                              command-parser, pay-link, reminder-message, metrics
-```
+- **Framework:** Next.js 16.4.6 (App Router), React 19.3.0, TypeScript 5
+- **Styling and UI:** Tailwind CSS 4.3.3, shadcn, @base-ui/react, class-variance-authority, lucide-react, next-themes, tw-animate-css
+- **State:** zustand 5 (persisted to browser localStorage, no backend)
+- **Motion and 3D:** motion, framer-motion, three, @react-three/fiber, @react-three/drei
+- **Charts and dates:** recharts, date-fns
+- **Other:** sonner (toasts), cmdk (command palette), qrcode.react (UPI QR codes)
 
 ## Run locally
+
+Requires Node 20 or newer.
 
 ```bash
 git clone https://github.com/ItzMeVishwas/feeflow.git
@@ -100,19 +60,43 @@ npm install
 npm run dev        # open http://localhost:3000
 ```
 
-> On some Indian networks npm resets connections. If that happens, run
-> `$env:NODE_OPTIONS="--dns-result-order=ipv4first"` (PowerShell) first.
+| Command | What it does |
+|---|---|
+| `npm run dev` | Start the development server |
+| `npm run build` | Create a production build |
+| `npm run start` | Serve the production build |
+| `npm run lint` | Run ESLint |
 
-On first visit, pick **Explore with demo data** for 12 sample students in Pune with realistic late payers, or **Start with my own students**.
+On some networks, npm install or build fails with connection resets on Windows. As an option, set this in PowerShell first: `$env:NODE_OPTIONS="--dns-result-order=ipv4first"`
 
-## Built with Codebenders
+On first visit, choose **Explore with demo data** for sample students, or start with your own.
 
-Every feature was built in the **Codebenders IDE** with the **Nexen** agent, one small feature per chat.
-- **`PROMPTS.md`:** the full prompt log with the matching commits.
-- **`/feeflow-design`:** a custom Nexen workspace skill holding the design system (see `docs/feeflow-design-skill.md`), loaded at the start of every UI prompt.
-- **UI pieces installed with the CLI** instead of prompts, to save tokens (shadcn, the motion-primitives registry).
-- **`HANDOFF.md`:** how we moved the project between two team accounts mid-hackathon.
+## Project structure
 
-## Guardrails
+```
+src/
+  app/          Pages: landing, dashboard, students, invoices, forecast, calendar,
+                report, insights, bills, attendance, settings, and the public pay and receipt pages
+  components/   Shared UI: sidebar, dialogs, charts, calendar, landing sections
+  lib/          Store, seed data, forecast, chase queue, reminders, pay links, command parser
+docs/           Design system notes for the feeflow-design skill
+HANDOFF.md      Setup and project handoff guide
+PROMPTS.md      Prompts used to build the app, with matching commits
+```
 
-Sample data only. FeeFlow never moves money: UPI links open the parent's own UPI app. No personal data leaves the device.
+## Built with Codebenders and Nexen
+
+- Built in the Codebenders IDE with the Nexen agent, as thin vertical slices: each feature was one small end-to-end change in its own chat.
+- The `feeflow-design` skill (`.codebenders/skills/feeflow-design/SKILL.md`) holds the design system and was loaded for every UI prompt.
+- `PROMPTS.md` lists the prompts used, with the matching commits.
+
+## Judging criteria
+
+| Criterion | How FeeFlow addresses it |
+|---|---|
+| Problem and impact | The chase queue and WhatsApp reminders turn late fees into one-tap follow-ups, aimed at the chasing that tutors do by hand. |
+| Innovation | The realistic forecast uses each parent's actual lateness and promised dates, and UPI pay links work with no backend. |
+| Technical execution | Next.js 16 with a typed zustand store, pure forecast and chase logic in src/lib, and a production build. |
+| Design and UX | A glass design system with light and dark themes, a mobile bottom nav, and a Ctrl+K command palette. |
+| Business viability | A free tier up to 15 students and a Pro plan at ₹199 per month, with no server costs because data stays in the browser. |
+| Use of AI and tooling | The Nexen agent built the app in thin slices with a reusable design skill, and Ctrl+K commands use a rule-based parser. |

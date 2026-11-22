@@ -4,6 +4,7 @@ import { useMemo, useState, useSyncExternalStore } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { AffordBox } from "@/components/afford-box"
 import { RunwayChart } from "@/components/runway-chart"
 import {
   buildForecast,
@@ -191,6 +192,8 @@ export default function ForecastPage() {
           See when cash runs short, and test what a late payment or a student leaving would do.
         </p>
       </header>
+
+      <AffordBox state={state} />
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
         <div className="min-w-0 space-y-3">
